@@ -171,8 +171,13 @@ def health_line(provider, symbols, now, staleness_limit):
     h = provider.health(symbols, now, staleness_limit)
     n = h["symbols"]
     from_bars = f" + {h['quotes_from_bars']} from bars" if h["quotes_from_bars"] else ""
+    newest = h.get("oldest_newest_bar")
+    # The newest closed bar of the most out-of-date symbol. It should track the
+    # clock: ~5 minutes behind live, ~20 behind delayed. A time that stops moving
+    # means the feed has frozen, as it did unnoticed all day on 2026-09-25.
+    lag = f", newest bar {newest:%H:%M}" if newest else ""
     return (f"data: bars today {h['bars_today']}/{n} (streaming {h['streaming']}), "
-            f"quotes {h['quotes']}/{n}{from_bars}, fresh {h['fresh']}/{n}")
+            f"quotes {h['quotes']}/{n}{from_bars}, fresh {h['fresh']}/{n}{lag}")
 
 
 def main() -> int:

@@ -436,7 +436,8 @@ def test_health_counts_what_the_bot_can_use():
         p.poll(s)
     h = p.health(["AG", "HL"], clock.t, 30)
     assert h == {"symbols": 2, "streaming": 2, "bars_today": 2, "quotes": 0,
-                 "quotes_from_bars": 2, "fresh": 2}
+                 "quotes_from_bars": 2, "fresh": 2,
+                 "oldest_newest_bar": datetime(2026, 9, 24, 9, 40, tzinfo=ET)}
     line = _run_bot().health_line(p, ["AG", "HL"], clock.t, 30)
     assert "quotes 0/2 + 2 from bars" in line and "fresh 2/2" in line
 
@@ -499,3 +500,91 @@ def test_live_quotes_anywhere_mean_the_feed_is_live():
     p.poll("ZZZ")
     assert p.data_delayed() is False
     assert p.get_state("ZZZ").quote is None
+
+
+# --- a stream that stops updating (2026-09-25: the paper bot traded all day on a
+# frozen 10 a.m. snapshot -- CDE at $19.09 from 14:10 to 14:50, RVOL sinking) -------
+
+class FrozenStreamIB(FakeIB):
+    """The initial keepUpToDate request returns bars that then never update. A
+    one-off request returns the bars up to now, or nothing if `refetch_fails`."""
+
+    def __init__(self, refetch_bars=12, refetch_fails=False, **kw):
+        super().__init__(quote=(math.nan, math.nan, math.nan), mdt=3, **kw)
+        self.refetch_bars = refetch_bars
+        self.refetch_fails = refetch_fails
+        self.cancelled = []
+
+    def reqHistoricalData(self, contract, **kw):
+        self.hist_calls.append((contract.symbol, kw["keepUpToDate"]))
+        if kw["keepUpToDate"]:
+            return BarList(_bars(n=4))
+        return [] if self.refetch_fails else _bars(n=self.refetch_bars)
+
+    def cancelHistoricalData(self, bars):
+        self.cancelled.append(bars)
+
+
+def _frozen(**kw):
+    ib = FrozenStreamIB(**kw)
+    clock = Clock()                                   # 10:00 ET, a Thursday
+    p = IBKRMarketDataProvider(ib, _contract(), clock=clock, synthetic_spread_pct=lambda s: 0.5)
+    p.subscribe(["CDE"])
+    return p, ib, clock
+
+
+def test_a_stream_frozen_for_two_bars_is_replaced_by_fetching():
+    p, ib, clock = _frozen()
+    clock.t += timedelta(minutes=9)
+    p.poll("CDE")
+    assert ib.hist_calls == [("CDE", True)]           # not yet: under two bars
+    clock.t += timedelta(minutes=2)
+    p.poll("CDE")
+    assert ib.hist_calls[-1] == ("CDE", False)
+    assert "CDE" in p.stalled and ib.cancelled
+    assert len(p.get_state("CDE").bars) == 11         # the fresh bars reach the bot
+
+
+def test_after_switching_it_fetches_once_per_bar():
+    p, ib, clock = _frozen()
+    clock.t += timedelta(minutes=11)
+    p.poll("CDE")
+    n = len(ib.hist_calls)
+    clock.t += timedelta(minutes=2)
+    p.poll("CDE")
+    assert len(ib.hist_calls) == n
+    clock.t += timedelta(minutes=3)
+    p.poll("CDE")
+    assert len(ib.hist_calls) == n + 1
+
+
+def test_no_refetching_outside_market_hours():
+    p, ib, clock = _frozen()
+    clock.t = datetime(2026, 9, 24, 22, 0, tzinfo=UTC)    # 18:00 ET
+    p.poll("CDE")
+    clock.t += timedelta(hours=1)
+    p.poll("CDE")
+    assert ib.hist_calls == [("CDE", True)]
+
+
+def test_a_frozen_delayed_feed_is_stale_not_fresh():
+    """The mistake that hid it: delayed data counted as fresh merely while connected."""
+    p, ib, clock = _frozen(refetch_fails=True)
+    clock.t += timedelta(minutes=15)
+    p.poll("CDE")
+    assert p.is_stale("CDE", 30, clock.t)
+
+
+def test_a_refreshed_delayed_feed_stays_fresh():
+    p, ib, clock = _frozen()
+    for _ in range(6):
+        clock.t += timedelta(minutes=5)
+        p.poll("CDE")
+    assert not p.is_stale("CDE", 30, clock.t)
+
+
+def test_health_line_shows_the_newest_bar_time():
+    p, _, clock = _frozen()
+    p.poll("CDE")
+    line = _run_bot().health_line(p, ["CDE"], clock.t, 30)
+    assert "newest bar 09:40" in line

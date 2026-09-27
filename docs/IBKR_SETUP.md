@@ -104,6 +104,24 @@ scale 0.76. Every symbol now reaches the strategy and gets a decision logged eac
 backtests). Prices remain 15-minute delayed, so this proves the plumbing, not the
 strategy.
 
+**The third run's result, checked 2026-09-27 from the Mac's signal log: the feed
+had frozen.** It ran about 24 hours (2,955 cycles, 32,132 decisions) with **0 entry
+candidates**, while the replay of the same day found HL at 11:55 (RVOL 1.18) and CDE at
+14:15 (RVOL 2.13). The log showed why: CDE's price read **$19.09 in every cycle from
+14:10 to 14:50** and HL's $17.91 from 11:50 to 12:30, and RVOL *fell* (HL 0.15 to 0.11,
+CDE 0.08 to 0.07), because cumulative volume stopped growing while the slot baseline
+kept rising. Without a subscription, IBKR answered the `keepUpToDate` request with the
+morning's bars once and never updated them. The delayed-mode relaxation, "fresh while
+connected", hid it: every symbol read `fresh 38/38` on a snapshot hours old.
+
+Fixed: a streaming symbol whose bars have not updated for two bar intervals during
+market hours is switched to fetching once per bar (the stream is cancelled). Delayed
+data now counts as fresh only while its bars were refreshed within two bar intervals,
+so a feed that freezes goes stale and stops trading instead of trading on old prices.
+The heartbeat's data line now ends with **newest bar HH:MM**, the newest closed bar
+of the most out-of-date symbol. It should track the clock, about 20 minutes behind on
+delayed data and 5 minutes on live; a time that stops moving means the feed has frozen.
+
 Not yet handled: reconnecting if TWS restarts mid-session (TWS restarts itself
 daily, by default near midnight, so start the bot after that). RVOL baselines come
 from the cache, not IBKR, so the cache must be re-downloaded now and then to stay

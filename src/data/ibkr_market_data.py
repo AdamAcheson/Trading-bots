@@ -59,6 +59,13 @@ def _as_et(d) -> datetime:
     return datetime(d.year, d.month, d.day, tzinfo=ET)
 
 
+def _market_open(wall: datetime) -> bool:
+    """Regular session, weekdays, 9:30-16:05 ET (five minutes' grace for the last
+    bar). Holidays are not detected; a refetch on a holiday just returns no new bar."""
+    et = wall.astimezone(ET)
+    return et.weekday() < 5 and (9, 30) <= (et.hour, et.minute) < (16, 5)
+
+
 def contract_resolver(ib) -> Callable[[str], object]:
     """Stock contracts on SMART routing, looked up once per symbol."""
     cache: Dict[str, object] = {}
@@ -90,6 +97,7 @@ class IBKRMarketDataProvider(MarketDataProvider):
         self._fetched_at: Dict[str, datetime] = {}
         self._bars_updated_at: Dict[str, datetime] = {}
         self.failed: Dict[str, str] = {}
+        self.stalled: set = set()
         self._synthetic_spread_pct = synthetic_spread_pct
         self.synthetic_quotes: set = set()
 
@@ -133,13 +141,30 @@ class IBKRMarketDataProvider(MarketDataProvider):
                 pass
 
     # --- the loop's per-symbol step -----------------------------------------------
+    def _stream_stalled(self, symbol: str, wall: datetime) -> bool:
+        """A streaming symbol whose bars have not updated for two bar intervals while
+        the market is open. On 2026-09-25, without a data subscription, IBKR sent the
+        morning's bars once and never updated them. The bot then traded all day on a
+        frozen 10 a.m. snapshot: the price never moved and RVOL sank as the baseline grew."""
+        return (self._streaming[symbol] and _market_open(wall)
+                and wall - self._bars_updated_at[symbol] >= 2 * self.bar_interval)
+
     def poll(self, symbol: str, now: Optional[datetime] = None) -> None:
-        """Copy what IBKR has streamed for `symbol` into the state the bot reads.
-        Makes no request, except in the fallback mode below, once per bar."""
+        """Copy what IBKR has streamed for `symbol` into the state the bot reads. Makes
+        no request, except once per bar when streaming is refused or has stalled."""
         if symbol not in self._bars:
             return
         wall = self._clock()
-        if not self._streaming[symbol] and wall - self._fetched_at[symbol] >= self.bar_interval:
+        if self._stream_stalled(symbol, wall):
+            try:
+                self.ib.cancelHistoricalData(self._bars[symbol])
+            except Exception:  # noqa: BLE001 -- the stream is being abandoned anyway
+                pass
+            self._streaming[symbol] = False
+            self.stalled.add(symbol)
+            self._fetched_at[symbol] = wall - self.bar_interval      # fetch now
+        if (not self._streaming[symbol] and _market_open(wall)
+                and wall - self._fetched_at[symbol] >= self.bar_interval):
             fresh = self._request_bars(self._contract_for(symbol), keep_up_to_date=False)
             if fresh:
                 self._bars[symbol] = fresh
@@ -169,7 +194,12 @@ class IBKRMarketDataProvider(MarketDataProvider):
             self.synthetic_quotes.add(symbol)
         else:
             state.quote = None
-        if delayed and self.ib.isConnected():
+        bars_age = wall - self._bars_updated_at.get(symbol, wall)
+        if delayed and self.ib.isConnected() and bars_age <= 2 * self.bar_interval + timedelta(minutes=1):
+            # Delayed quotes never arrive, so freshness rests on the bars: fresh while
+            # they have been refreshed within two bar intervals, stale once they have
+            # frozen. Before 2026-09-26 this read "fresh while connected", which hid
+            # the frozen feed for a whole day.
             state.received_at = wall
         else:
             heard = [d for d in (quote_time, self._bars_updated_at.get(symbol)) if d is not None]
@@ -202,7 +232,7 @@ class IBKRMarketDataProvider(MarketDataProvider):
         """How many symbols the bot can actually evaluate right now, and why not."""
         today = now.astimezone(ET).date()
         out = {"symbols": len(symbols), "streaming": 0, "bars_today": 0, "quotes": 0,
-               "quotes_from_bars": 0, "fresh": 0}
+               "quotes_from_bars": 0, "fresh": 0, "oldest_newest_bar": None}
         for s in symbols:
             st = self._inner.get_state(s)
             out["streaming"] += 1 if self._streaming.get(s) else 0
@@ -210,6 +240,10 @@ class IBKRMarketDataProvider(MarketDataProvider):
             if st.quote is not None:
                 out["quotes_from_bars" if s in self.synthetic_quotes else "quotes"] += 1
             out["fresh"] += 0 if self.is_stale(s, staleness_limit_seconds, now) else 1
+            if st.bars:
+                newest = st.bars[-1].timestamp.astimezone(ET)
+                if out["oldest_newest_bar"] is None or newest < out["oldest_newest_bar"]:
+                    out["oldest_newest_bar"] = newest
         return out
 
     def session_volumes(self, symbol: str) -> Dict[str, float]:
