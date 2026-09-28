@@ -220,6 +220,7 @@ class PositionManager:
                 position.entry_price, exit_price, position.original_shares
             ),
             benchmark_return=benchmark_return,
+            partial_exits=[(p.price, p.shares) for p in position.partial_exits],
         )
 
         self.transition(ticker, TradeState.CLOSED)

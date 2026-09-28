@@ -106,15 +106,31 @@ class Trade:
     overnight_yes_no: bool = False
 
     def close(self, exit_time: datetime, exit_price: float, reason: ExitReason,
-              commission: float = 0.0, benchmark_return: Optional[float] = None) -> None:
+              commission: float = 0.0, benchmark_return: Optional[float] = None,
+              partial_exits: Optional[list] = None) -> None:
+        """`partial_exits`: (price, shares) already sold before this final exit. Only
+        the remaining shares go at `exit_price`.
+
+        Until 2026-09-28 every share was booked at `exit_price`, so the 35% partial
+        sale at 1.5R was valued at the final exit's price instead of its own. The
+        holdout's intraday gross was overstated by $262 (10.6%) and the tuning
+        period's by $109 (7.4%), because the biggest winners exit at the target,
+        above the partial's price. The broker was never affected: the partial really
+        was sold. Only the bot's own record of it was wrong."""
+        partial_exits = partial_exits or []
+        sold = sum(s for _, s in partial_exits)
+        remaining = max(self.shares - sold, 0)
         self.exit_time = exit_time
         self.exit_price = exit_price
         self.exit_reason = reason
-        self.gross_profit = (exit_price - self.entry_price) * self.shares
+        self.gross_profit = (sum((p - self.entry_price) * s for p, s in partial_exits)
+                             + (exit_price - self.entry_price) * remaining)
         self.net_profit = self.gross_profit - commission
-        self.percentage_return = (exit_price - self.entry_price) / self.entry_price * 100.0
+        cost_basis = self.entry_price * self.shares
+        self.percentage_return = self.gross_profit / cost_basis * 100.0 if cost_basis else 0.0
         risk_per_share = self.entry_price - self.initial_stop
-        self.r_return = (exit_price - self.entry_price) / risk_per_share if risk_per_share else 0.0
+        risk = risk_per_share * self.shares
+        self.r_return = self.gross_profit / risk if risk else 0.0
         self.benchmark_return_during_trade = benchmark_return
 
     def update_excursion(self, current_price: float) -> None:
