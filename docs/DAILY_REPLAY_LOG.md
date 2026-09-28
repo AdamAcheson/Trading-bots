@@ -39,6 +39,7 @@ Backtest baselines to compare against (19-ticker holdout, 568 sessions):
 | 2026-09-23 | -1.42% | 2194 | 2 | -$38.49 | 0.83 | benchmark confirmation (1044) | BHP and SSRM both stopped at -1.00R; first row on the $5,000 cash config, other entry candidates refused by the two-slot and settled-cash limits |
 | 2026-09-24 | +0.54% | 2205 | 2 | -$29.64 | 0.69 | benchmark confirmation (955) | SLV gapped -1.50% then drifted up; CDE and EQX entered 12:20, both stopped at -1.00R; a 14:25 BHP candidate was refused by the settled-cash limit. The bot also ran on IBKR paper (delayed data) this afternoon but placed no trades |
 | 2026-09-25 | +0.57% | 2150 | 1 | -$1.25 | 0.56 | low volume (1188) | HL entered 11:55 at $18.23, held all afternoon, closed flat at 15:50 (overnight review), -$1.25 in costs; a 14:15 CDE candidate was not taken. Replayed although the data gate flagged AUGO 0.46x and COPX 0.40x volume 2.5 h after the close, probably a quiet Friday; thin volume can only suppress entries. Same day the bot ran live on IBKR paper (delayed data), see docs/IBKR_SETUP.md |
+| 2026-09-28 | -0.67% | 2226 | 2 | -$36.66 | 0.78 | low volume (981) | AUGO (11:05) and EQX (12:25) both stopped at -1.00R; later candidates (WPM, EQX, HL x2) refused by the settled-cash limit once both buys had used the day's cash. Bot also ran on IBKR paper (delayed data) after two feed fixes that morning |
 
 ## Routine reliability
 
@@ -139,7 +140,7 @@ tape was never up.
 
 ### Running tally
 
-**$5,000 cash basis (from 2026-09-23):** 3 sessions logged, 3 with trades, 0 with zero. Cumulative P&L **-$69.38** across 5 trades.
+**$5,000 cash basis (from 2026-09-23):** 4 sessions logged, 4 with trades, 0 with zero. Cumulative P&L **-$106.04** across 7 trades.
 
 **Old $100,000 basis (before 2026-09-23; divide by 12.5):** 8 sessions logged, 6 with trades, 2 with zero. Cumulative P&L **+$664.03** across 16 trades.
 
