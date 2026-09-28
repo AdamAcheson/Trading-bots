@@ -122,6 +122,14 @@ The heartbeat's data line now ends with **newest bar HH:MM**, the newest closed 
 of the most out-of-date symbol. It should track the clock, about 20 minutes behind on
 delayed data and 5 minutes on live; a time that stops moving means the feed has frozen.
 
+**2026-09-28, started before the open:** the bar-freeze fix worked (the data line went
+to `streaming 0` at 09:49, fetching instead), but the heartbeat read `quotes 0/38,
+fresh 0/38`. IBKR had flagged **no** symbol as delayed, so the feed was judged live, got
+no quotes and no fallback, and every symbol was stale. The bot could not trade. Now, if
+no quote has arrived anywhere two minutes into the session (or two minutes after a
+mid-session start), the feed is treated as delayed. A live subscription quotes within
+seconds, so the rule cannot mistake a working live feed for a delayed one.
+
 Not yet handled: reconnecting if TWS restarts mid-session (TWS restarts itself
 daily, by default near midnight, so start the bot after that). RVOL baselines come
 from the cache, not IBKR, so the cache must be re-downloaded now and then to stay

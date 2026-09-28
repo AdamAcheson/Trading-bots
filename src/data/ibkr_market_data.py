@@ -98,11 +98,13 @@ class IBKRMarketDataProvider(MarketDataProvider):
         self._bars_updated_at: Dict[str, datetime] = {}
         self.failed: Dict[str, str] = {}
         self.stalled: set = set()
+        self._subscribed_at: Optional[datetime] = None
         self._synthetic_spread_pct = synthetic_spread_pct
         self.synthetic_quotes: set = set()
 
     # --- setup -------------------------------------------------------------------
     def subscribe(self, symbols: List[str]) -> None:
+        self._subscribed_at = self._clock()
         self.ib.reqMarketDataType(3)   # live where subscribed, delayed otherwise
         for symbol in symbols:
             try:
@@ -226,6 +228,18 @@ class IBKRMarketDataProvider(MarketDataProvider):
             return False
         if told_delayed:
             return True
+        # IBKR does not always say so. Started before the open on 2026-09-28, the bot
+        # got no "delayed" flag for any symbol and no quotes at all, so it treated the
+        # feed as live with nothing to trade on (quotes 0/38, fresh 0/38). A live
+        # subscription quotes within seconds, so two minutes into the session with
+        # no quote anywhere means there is no live data: treat the feed as delayed.
+        wall = self._clock()
+        if self._subscribed_at is not None and _market_open(wall):
+            et = wall.astimezone(ET)
+            session_open = et.replace(hour=9, minute=30, second=0, microsecond=0)
+            since = max(self._subscribed_at.astimezone(ET), session_open)
+            if et - since >= timedelta(minutes=2):
+                return True
         return None
 
     def health(self, symbols: List[str], now: datetime, staleness_limit_seconds: float) -> Dict[str, int]:

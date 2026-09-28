@@ -588,3 +588,46 @@ def test_health_line_shows_the_newest_bar_time():
     p.poll("CDE")
     line = _run_bot().health_line(p, ["CDE"], clock.t, 30)
     assert "newest bar 09:40" in line
+
+
+# --- no "delayed" flag at all (2026-09-28: started before the open, IBKR flagged no
+# symbol and sent no quotes; the bot sat at quotes 0/38, fresh 0/38) --------------
+
+class SilentIB(FakeIB):
+    def reqMktData(self, contract, *a):
+        # ib_async's defaults: marketDataType 1, prices nan, no time
+        return SimpleNamespace(bid=math.nan, ask=math.nan, last=math.nan, marketDataType=1, time=None)
+
+
+def test_no_quote_two_minutes_into_the_session_means_delayed():
+    ib = SilentIB()
+    clock = Clock()
+    clock.t = datetime(2026, 9, 28, 13, 20, tzinfo=UTC)          # 09:20 ET, before the open
+    p = IBKRMarketDataProvider(ib, _contract(), clock=clock, synthetic_spread_pct=lambda s: 0.5)
+    p.subscribe(["CDE", "HL"])
+    assert p.data_delayed() is None
+    clock.t = datetime(2026, 9, 28, 13, 31, tzinfo=UTC)          # 09:31: too soon to tell
+    assert p.data_delayed() is None
+    clock.t = datetime(2026, 9, 28, 13, 32, tzinfo=UTC)          # 09:32
+    assert p.data_delayed() is True
+    p.poll("CDE")
+    assert "CDE" in p.synthetic_quotes
+
+
+def test_started_mid_session_waits_two_minutes_from_the_start():
+    ib = SilentIB()
+    clock = Clock()                                               # 10:00 ET
+    p = IBKRMarketDataProvider(ib, _contract(), clock=clock, synthetic_spread_pct=lambda s: 0.5)
+    p.subscribe(["CDE"])
+    clock.t += timedelta(minutes=1)
+    assert p.data_delayed() is None
+    clock.t += timedelta(minutes=1)
+    assert p.data_delayed() is True
+
+
+def test_live_quotes_arriving_keep_the_feed_live():
+    clock = Clock()
+    p = IBKRMarketDataProvider(FakeIB(mdt=1), _contract(), clock=clock, synthetic_spread_pct=lambda s: 0.5)
+    p.subscribe(["CDE"])
+    clock.t += timedelta(minutes=30)
+    assert p.data_delayed() is False
