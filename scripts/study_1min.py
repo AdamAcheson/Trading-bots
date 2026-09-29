@@ -65,17 +65,32 @@ def load_1min(min1_dir, symbol):
     return by_day
 
 
-def simulate(trade, steps, tm, book_at_close, review):
-    """steps: list of (time, price, atr). Returns gross P&L of the re-simulated trade."""
+def simulate(trade, steps, tm, book_at_close, review, resting=False):
+    """steps: list of (time, price, atr[, bar]). Returns gross P&L of the re-simulated trade.
+
+    resting=True models orders held AT THE BROKER: a stop order that sells when the bar's
+    low touches the stop (at the stop, or at the bar's open if it gapped through), and a
+    limit order at the target that sells when the high reaches it. The stop is checked first,
+    the conservative assumption when one bar touches both. The breakeven, trailing and partial
+    rules still update on each close, as the bot does."""
     pm = PositionManager(max_concurrent_positions=10)
     entry_time = datetime.fromisoformat(trade["entry_time"])
     pos = pm.open_position(trade["ticker"], "", entry_time, trade["entry_price"], trade["shares"],
                            trade["initial_stop"], trade["initial_target"], "VWAP_RECLAIM", 0.0)
     exit_price = None
-    for t, price, a in steps:
+    for step in steps:
+        t, price, a = step[0], step[1], step[2]
         if (t.hour, t.minute) >= review:
             exit_price = price                     # the 15:50 overnight review exits
             break
+        if resting:
+            bar = step[3]
+            if bar.low <= pos.current_stop:
+                exit_price = min(pos.current_stop, bar.open)
+                break
+            if bar.high >= pos.current_target:
+                exit_price = max(pos.current_target, bar.open)
+                break
         act = pm.manage(trade["ticker"], current_price=price, current_time=t,
                         breakeven_trigger_r=tm["breakeven_trigger_r"],
                         partial_exit_enabled=tm["partial_exit"]["enabled"],
@@ -99,7 +114,7 @@ def run(min1_dir, journal, tm):
     intraday = [t for t in trades if t["exit_time"][:10] == t["date"]]
     five = {}
     one = {}
-    res = {"V0": [], "V1": [], "V2": [], "journal": [], "R": [], "dEntryR": [], "earlier": 0,
+    res = {"V0": [], "V1": [], "V2": [], "V3": [], "V4": [], "cost": [], "tiered": [], "journal": [], "R": [], "dEntryR": [], "earlier": 0,
            "skipped": 0, "close_mismatch": []}
     for t in intraday:
         sym, day = t["ticker"], t["date"]
@@ -116,7 +131,7 @@ def run(min1_dir, journal, tm):
         steps5 = []
         for i, b in enumerate(bars5):
             if b.timestamp > entry_ts:
-                steps5.append((b.timestamp, b.close, atr(bars5[:i + 1], 14)))
+                steps5.append((b.timestamp, b.close, atr(bars5[:i + 1], 14), b))
         # 1-minute steps: from the signal bar's close; ATR of the 5-minute bars closed by then
         steps1 = []
         for m in bars1:
@@ -124,7 +139,7 @@ def run(min1_dir, journal, tm):
                 continue
             now = m.timestamp + ONE
             closed = [b for b in bars5 if b.timestamp + FIVE <= now]
-            steps1.append((m.timestamp, m.close, atr(closed, 14)))
+            steps1.append((m.timestamp, m.close, atr(closed, 14), m))
         risk = t["entry_price"] - t["initial_stop"]
         if risk <= 0:
             res["skipped"] += 1
@@ -132,7 +147,13 @@ def run(min1_dir, journal, tm):
         res["V0"].append(simulate(t, steps5, tm, book_at_close=False, review=REVIEW_5))
         res["V1"].append(simulate(t, steps5, tm, book_at_close=True, review=REVIEW_5))
         res["V2"].append(simulate(t, steps1, tm, book_at_close=True, review=REVIEW_1))
+        res["V3"].append(simulate(t, steps5, tm, book_at_close=True, review=REVIEW_5, resting=True))
+        res["V4"].append(simulate(t, steps1, tm, book_at_close=True, review=REVIEW_1, resting=True))
         res["journal"].append(t["gross_profit"])
+        res["cost"].append(t["gross_profit"] - t["net_profit"])
+        sh, px = t["shares"], t["entry_price"]
+        order = min(max(0.35, 0.0035 * sh), 0.01 * sh * px) + sh * 0.0032   # Pro Tiered, approx.
+        res["tiered"].append(order * 2 + 0.000166 * sh)
         res["R"].append(risk * t["shares"])
         # B: first 1-minute close above VWAP inside the signal bar
         sig5 = next((b for b in bars5 if b.timestamp == entry_ts), None)
@@ -154,15 +175,19 @@ def run(min1_dir, journal, tm):
 
 def report(name, trades, intraday, r):
     n = len(r["V0"])
-    tot = {k: sum(r[k]) for k in ("V0", "V1", "V2", "journal")}
+    tot = {k: sum(r[k]) for k in ("V0", "V1", "V2", "V3", "V4", "journal")}
     print(f"\n== {name}: {len(trades)} trades, {len(intraday)} intraday, {n} simulated, "
           f"{r['skipped']} skipped (no 1-minute data) ==")
     print(f"  journal gross ${tot['journal']:,.2f}   V0 (reproduction) ${tot['V0']:,.2f}")
-    for k in ("V1", "V2"):
+    for k in ("V1", "V2", "V3", "V4"):
         diff = tot[k] - tot["V0"]
         pct = diff / abs(tot["V0"]) * 100 if tot["V0"] else float("nan")
         per_trade = st.mean([(a - b) / rr for a, b, rr in zip(r[k], r["V0"], r["R"])])
         print(f"  {k} ${tot[k]:,.2f}  vs V0 {diff:+,.2f} ({pct:+.1f}%), {per_trade:+.3f} R/trade")
+    c, ti = sum(r["cost"]), sum(r["tiered"])
+    print(f"  net of modelled spread cost ${c:,.0f} / also of Pro Tiered commission ${ti:,.0f}:")
+    for k in ("V0", "V1", "V2", "V3", "V4"):
+        print(f"    {k}: ${tot[k] - c:,.0f} / ${tot[k] - c - ti:,.0f}")
     print(f"  B: earlier 1-minute entry available in {r['earlier']}/{n} trades; "
           f"mean change {st.mean(r['dEntryR']):+.3f} R/trade (upper bound)")
     if r["close_mismatch"]:

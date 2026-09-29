@@ -2332,3 +2332,91 @@ filter that matters here is already in place and works *during* the day, which a
 rule fixed at the open cannot.
 
 **Running tally: 29 tested, 2 adopted.**
+
+## 1-minute study, step 1: the backtest's exits were not achievable (2026-09-28)
+
+**This finding invalidates the headline profit of every backtest in this document.**
+Pre-registered before any 1-minute data was fetched (`PREREG_1MIN.md`, rules copied below).
+1-minute bars from Twelve Data for every symbol-day the shipped $5,000 settled-cash journals
+traded on (444 requests). 832 of 902 same-day trades were simulated; 70 were skipped where
+Twelve Data returned under 300 one-minute bars for the day, and 55 overnight holds were excluded.
+
+### Two things found while building it
+
+1. **Partial exits were booked at the wrong price (a bug, fixed).** `Trade.close` valued every
+   share at the final exit's price, so the 35% partial sale at 1.5R was booked at the wait
+   price instead of its own. The re-simulation matched the journal exactly on every trade
+   without a partial and missed on every trade with one. The fix changed the shipped
+   configuration's results (same 671 / 286 trades):
+
+   | | holdout net | per session | tuning net | per session |
+   |---|---|---|---|---|
+   | as previously reported | $2,775.91 | $4.89 | $1,598.00 | $8.28 |
+   | **partial exits booked correctly** | **$2,452.51** | **$4.32** | **$1,414.95** | **$7.33** |
+
+   The broker was never affected; the partial really was sold. Only the record was wrong.
+
+2. **The backtest's exit model is optimistic in two ways at once.** `manage()` is passed the
+   5-minute bar's CLOSE, so a stop is only triggered when a bar *closes* beyond it and dips
+   within a bar are never seen. And when it is triggered, the exit is booked at the stop
+   LEVEL, not at the close that triggered it, which is usually well past the stop. No real
+   order can do both: a stop order sees the dips, and a decision taken on the close gets the
+   close's price. The live bot checks every ~30 seconds and sells at the bid.
+
+### Result A: exits re-simulated realistically
+
+Each trade re-run with the project's own `PositionManager.manage()` (breakeven 1R, 35%
+partial at 1.5R, 1x ATR trailing from 1R), from the backtest's own entry. Gross P&L of the
+simulated same-day trades:
+
+| exit model | holdout (567) | tuning (265) |
+|---|---|---|
+| V0 backtest: 5-min closes, booked at the level (reproduction, journal $2,003 / $1,368) | $2,001 | $1,368 |
+| V1 5-min closes, booked at that close | $459 (-77%) | $462 (-66%) |
+| V2 1-min closes, booked at that close (≈ the live bot) | $265 (-87%) | $543 (-60%) |
+| V3 stop/target orders at the broker, 5-min bars (stop first when a bar touches both) | $319 (-84%) | $496 (-64%) |
+| V4 stop/target orders at the broker, 1-min bars | $165 (-92%) | $468 (-66%) |
+
+Net of the modelled spread cost ($592 / $256), then also of IBKR Pro Tiered commission
+(approx. $913 / $400):
+
+| | holdout | tuning |
+|---|---|---|
+| V0 (the backtest) | +$1,409 / +$496 | +$1,112 / +$712 |
+| V1 to V4 (realistic) | **-$133 to -$427 / -$1,046 to -$1,339** | **+$206 to +$287 / -$113 to -$194** |
+
+**Pre-registered rule: realistic exits differing from V0 by more than 10% in either period
+means the headline numbers are restated. They differ by 60-92% in both.** Realistic exits
+remove about 0.14-0.20 R per trade. The stops are tight (the 0.5% floor binds on most trades),
+so a few cents past the stop is a large fraction of R. With realistic exits, **the strategy
+loses money in the holdout before commissions, and in both periods after them.** Resting
+stop orders do not rescue it: they get out at the stop, but they also get stopped by dips
+the close-only check never saw.
+
+### Result B: 1-minute entries (upper bound)
+
+Entering at the first 1-minute close above VWAP inside the signal's 5-minute bar, instead of
+at that bar's close, would improve entry by **+0.236 R per trade (holdout) and +0.278 R
+(tuning)**. That is an upper bound: it counts none of the false triggers a live 1-minute
+entry would also take. The pre-registered bar to proceed (+0.10 R in both periods) is met. But
+it was set against the V0 exits, and the exit result changes what step 2 must answer.
+
+### What this changes
+
+* **Every previous result in this document was measured with the V0 exit model.** That
+  includes the 29 rule tests, the stop and exit variants, the time-of-day effect and the cost
+  analysis. Their conclusions about *relative* differences may partly survive, but no absolute
+  profit figure does. In particular "Would a wider stop have rescued the losers?" and the exit
+  variants must be re-tested: wider stops are exactly what the realistic model penalises least.
+* **The daily replays use the same V0 model.** Their figures are optimistic in the same way.
+* **Do not trade real money on this strategy.** Nothing here shows a profit under
+  executable exits. Paper trading costs nothing and can continue, but it cannot validate a
+  strategy the realistic backtest says loses money.
+* **Next, in order:** (1) make the backtest's exits realistic (stop and target orders
+  against each bar's high and low, V3), so every later test measures something achievable;
+  (2) re-test stop width and the exit rules under it, because tight stops are what realistic
+  exits punish most; (3) only then step 2, 1-minute entries, which by the upper bound above could
+  add up to ~0.25 R per trade.
+
+**Running tally: 30 tested, 2 adopted, 1 bug fixed.** The finding that matters is not a rule;
+it is that the measuring stick was wrong.
