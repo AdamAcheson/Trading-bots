@@ -2451,3 +2451,38 @@ The daily replay now uses the realistic model too; rows before 2026-09-29 in
 **Next (step 2):** stop width and the exit rules under realistic exits. The 0.5% stop floor
 binds on most trades, and a stop that tight is what intrabar dips trigger. Earlier tests of
 wider stops were run on the old model, which never saw those dips.
+
+## Step 2: stop width and exit rules under realistic exits -- REJECTED (2026-09-29)
+
+Pre-registered (`PREREG_STEP2.md`): select on tuning (193 sessions) by net after the modelled
+spread AND approximate IBKR Pro Tiered commission, then confirm only the winner on the holdout
+(568 sessions). Adopt if the paired daily difference's 95% block-bootstrap interval (block 5,
+5,000 resamples, seed 7) excludes zero.
+
+Tuning, per session after commission, vs the realistic baseline (+$0.25):
+
+| variant | trades | >=3R | per session | vs base |
+|---|---|---|---|---|
+| stop floor 0.75% | 287 | 10 | +$0.09 | -$0.16 |
+| stop floor 1.0% | 285 | 8 | +$1.52 | +$1.27 |
+| stop floor 1.5% | 273 | 6 | +$0.50 | +$0.25 |
+| stop floor 2.0% | 287 | 2 | +$3.59 | +$3.34 |
+| trailing stop off | 284 | 26 | +$0.70 | +$0.45 |
+| partial exit off | 287 | 13 | +$0.58 | +$0.33 |
+| trailing 2.0 x ATR | 286 | 15 | +$0.64 | +$0.39 |
+| 2.0% floor + trailing off | 274 | 2 | +$3.44 | +$3.19 |
+| **2.0% floor + trailing 2.0 x ATR (winner)** | **284** | **2** | **+$4.17** | **+$3.92** |
+
+The stop-width series is not monotonic (1.5% worse than 1.0% and 2.0%), a sign of noise.
+
+**Holdout confirmation of the winner: 468 trades, net +$677.90, +$10.49 after commission,
++$0.02 per session. Paired daily difference vs baseline +$1.35 per session, 95% CI [-$1.08,
++$3.84]. The interval includes zero: REJECTED.** (The 2.0% floor alone, also run on the holdout:
++$0.87 per session, 95% CI [-$1.58, +$3.42], likewise not significant.)
+
+**Go-live test: failed.** The best configuration found is break-even after commission in
+the holdout (+$0.02 per session, 90% lower bound -$2.06). Wider stops lose most >=3R winners,
+because the fixed 3-5.5% target becomes a 1.5-2.8R target. Nothing in step 2 shows a
+tradable edge. The shipped configuration is unchanged.
+
+**Running tally: 31 tested, 2 adopted, 1 bug fixed.**
