@@ -44,6 +44,7 @@ Backtest baselines to compare against (19-ticker holdout, 568 sessions):
 | 2026-09-24 | +0.54% | 2205 | 2 | -$29.64 | 0.69 | benchmark confirmation (955) | SLV gapped -1.50% then drifted up; CDE and EQX entered 12:20, both stopped at -1.00R; a 14:25 BHP candidate was refused by the settled-cash limit. The bot also ran on IBKR paper (delayed data) this afternoon but placed no trades |
 | 2026-09-25 | +0.57% | 2150 | 1 | -$1.25 | 0.56 | low volume (1188) | HL entered 11:55 at $18.23, held all afternoon, closed flat at 15:50 (overnight review), -$1.25 in costs; a 14:15 CDE candidate was not taken. Replayed although the data gate flagged AUGO 0.46x and COPX 0.40x volume 2.5 h after the close, probably a quiet Friday; thin volume can only suppress entries. Same day the bot ran live on IBKR paper (delayed data), see docs/IBKR_SETUP.md |
 | 2026-09-28 | -0.67% | 2226 | 2 | -$36.66 | 0.78 | low volume (981) | AUGO (11:05) and EQX (12:25) both stopped at -1.00R; later candidates (WPM, EQX, HL x2) refused by the settled-cash limit once both buys had used the day's cash. Bot also ran on IBKR paper (delayed data) after two feed fixes that morning |
+| 2026-09-29 | +0.85% | 2191 | 1 | +$9.21 | 0.67 | benchmark confirmation (1010) | HL entered 12:35 at $17.05 and exited 14:20 on the trailing stop, +0.82R; EQX entered 14:50 at $11.36 and is held overnight (overnight review approved it; closed $11.39, not counted until it exits). First row on the resting-order exit model. Replayed although the data gate flagged AUGO at 0.37x volume after four refetches, probably AUGO's own quiet day; thin volume can only suppress entries |
 
 ## Routine reliability
 
@@ -144,7 +145,7 @@ tape was never up.
 
 ### Running tally
 
-**$5,000 cash basis (from 2026-09-23):** 4 sessions logged, 4 with trades, 0 with zero. Cumulative P&L **-$106.04** across 7 trades.
+**$5,000 cash basis (from 2026-09-23):** 5 sessions logged, 5 with trades, 0 with zero. Cumulative P&L **-$96.83** across 8 trades.
 
 **Old $100,000 basis (before 2026-09-23; divide by 12.5):** 8 sessions logged, 6 with trades, 2 with zero. Cumulative P&L **+$664.03** across 16 trades.
 
