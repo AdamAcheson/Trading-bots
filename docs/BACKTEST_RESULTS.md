@@ -2344,7 +2344,7 @@ Twelve Data returned under 300 one-minute bars for the day, and 55 overnight hol
 ### Two things found while building it
 
 1. **Partial exits were booked at the wrong price (a bug, fixed).** `Trade.close` valued every
-   share at the final exit's price, so the 35% partial sale at 1.5R was booked at the wait
+   share at the final exit's price, so the 35% partial sale at 1.5R was booked at that
    price instead of its own. The re-simulation matched the journal exactly on every trade
    without a partial and missed on every trade with one. The fix changed the shipped
    configuration's results (same 671 / 286 trades):
