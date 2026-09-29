@@ -2420,3 +2420,34 @@ it was set against the V0 exits, and the exit result changes what step 2 must an
 
 **Running tally: 30 tested, 2 adopted, 1 bug fixed.** The finding that matters is not a rule;
 it is that the measuring stick was wrong.
+
+## Realistic exits in the backtester: the new baseline (2026-09-29)
+
+`trade_management.exit_model: resting_orders` is now shipped (step 1 of the plan above): the
+simulated broker fills a stop when a bar's low reaches it (at the stop, or the open if the bar
+opened through it) and a target when the high reaches it, stop first. Breakeven, trailing and
+the partial still update on each close. `--exit-model close_at_level` reproduces the old model:
+the tuning period re-run with it gives exactly $1,414.95, the corrected figure above.
+
+Shipped $5,000 settled-cash configuration, everything else unchanged:
+
+| | trades | win rate | avg R | trades >= 3R | net (spread modelled) | per session | after IBKR Pro Tiered (approx.) | per session | max DD |
+|---|---|---|---|---|---|---|---|---|---|
+| holdout, old model (corrected) | 671 | | +0.288 | 30 | $2,452.51 | $4.32 | $1,357 | $2.39 | $186 |
+| **holdout, realistic** | **672** | **46.4%** | **+0.093** | **15** | **$347.96** | **$0.61** | **-$756** | **-$1.33** | **$371** |
+| tuning, old model (corrected) | 286 | 49.0% | +0.260 | 14 | $1,414.95 | $7.33 | $989 | $5.12 | $254 |
+| **tuning, realistic** | **287** | **46.0%** | **+0.101** | **10** | **$475.08** | **$2.46** | **+$48** | **+$0.25** | **$460** |
+
+**With exits that real orders can achieve, the shipped strategy makes about $0.61 and $2.46 a
+session before commissions, and loses money (holdout) or breaks even (tuning) after IBKR Pro
+commissions.** Half the >= 3R winners disappear: with a tight stop, many of the eventual big
+winners are stopped out by an early dip that the close-only model never saw. Drawdowns double.
+
+This is the baseline every later test is measured against. Every result earlier in this
+document was measured with the old model and must be re-checked before it is relied on.
+The daily replay now uses the realistic model too; rows before 2026-09-29 in
+`docs/DAILY_REPLAY_LOG.md` used the old one.
+
+**Next (step 2):** stop width and the exit rules under realistic exits. The 0.5% stop floor
+binds on most trades, and a stop that tight is what intrabar dips trigger. Earlier tests of
+wider stops were run on the old model, which never saw those dips.

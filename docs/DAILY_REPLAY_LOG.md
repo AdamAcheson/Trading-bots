@@ -18,6 +18,10 @@ backtest's.
 
 All rows are SIMULATED replays of a finished session, not executed trades.
 
+**Exit model changed on 2026-09-29.** Rows up to and including 2026-09-28 used the old
+`close_at_level` exits, which overstated P&L (docs/BACKTEST_RESULTS.md, 1-minute study).
+Later rows use realistic `resting_orders` exits.
+
 Backtest baselines to compare against (19-ticker holdout, 568 sessions):
 
 * ~30% of sessions take **zero** trades
