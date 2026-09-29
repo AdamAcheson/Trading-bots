@@ -320,6 +320,12 @@ def main() -> int:
              "of trades, so this rule may be refusing the trades that pay.",
     )
     parser.add_argument(
+        "--exit-model", choices=("resting_orders", "close_at_level"), default=None,
+        help="How simulated stops and targets fill (in-memory only). resting_orders (shipped): "
+             "on the bar's low/high, as real orders would. close_at_level: the pre-2026-09-29 "
+             "model, triggered on closes but booked at the level; use only to reproduce old results.",
+    )
+    parser.add_argument(
         "--no-partial-exit", action="store_true",
         help="EXPERIMENT override: disable the 1.5R partial exit (applied in-memory only). "
              "It sells sell_fraction of EVERY winner at 1.5R -- including the small number of "
@@ -385,7 +391,7 @@ def main() -> int:
         args.max_position_size_dollars is not None, args.max_trades_per_day is not None,
         args.trailing_atr is not None, args.max_position_pct_equity is not None,
         args.no_trailing, args.only_tickers is not None,
-        args.no_partial_exit, args.partial_exit_trigger_r is not None,
+        args.no_partial_exit, args.partial_exit_trigger_r is not None, args.exit_model is not None,
         args.no_chase_rule, args.chase_max_atr_above_vwap is not None,
         args.starting_equity is not None, args.min_relative_volume is not None,
         args.min_stop_pct is not None,
@@ -442,6 +448,9 @@ def main() -> int:
         if args.chase_max_atr_above_vwap is not None:
             config.strategy["chase_rule"]["max_atr_above_vwap"] = args.chase_max_atr_above_vwap
             print(f"  chase_rule.max_atr_above_vwap = {args.chase_max_atr_above_vwap}")
+        if args.exit_model is not None:
+            config.strategy["trade_management"]["exit_model"] = args.exit_model
+            print(f"  trade_management.exit_model = {args.exit_model}")
         if args.no_partial_exit:
             config.strategy["trade_management"]["partial_exit"]["enabled"] = False
             print("  partial_exit = OFF")

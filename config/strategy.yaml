@@ -137,6 +137,16 @@ scoring:
     midday_window: 80
 
 trade_management:
+  # How the SIMULATED broker (backtests, daily replay) fills stops and targets:
+  #   resting_orders -- as orders resting at a broker: filled when a bar's low/high
+  #                     reaches the level (at the level, or the open if it gapped
+  #                     through). Achievable. The shipped default since 2026-09-29.
+  #   close_at_level -- the original model: triggered only when a bar CLOSES beyond
+  #                     the level, yet booked AT the level. No real order does both;
+  #                     against 1-minute data it overstated gross P&L by 60-92%
+  #                     (docs/BACKTEST_RESULTS.md, 1-minute study). Kept only to
+  #                     reproduce results recorded before 2026-09-29.
+  exit_model: resting_orders
   breakeven_trigger_r: 1.0
   # A real ratcheting stop, trailed atr_multiplier x ATR under the trade's
   # high-water mark once it reaches activate_at_r. breakeven_trigger_r above only

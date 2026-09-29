@@ -186,6 +186,7 @@ class TradingBot:
         self.reconciliation = Reconciliation()
         self._reported_discrepancies: set = set()
         self._last_exit_fill_price: Optional[float] = None
+        self._resting_checked: Dict[str, datetime] = {}
 
     def _snapshot_for(self, ticker: str, now: datetime) -> Optional[IndicatorSnapshot]:
         state = self.data_provider.get_state(ticker)
@@ -414,6 +415,14 @@ class TradingBot:
                 self.trade_journal.record(trade)
                 self.risk_manager.record_trade_result(trade.net_profit or 0.0, now, position.ticker)
                 continue
+            resting = self._resting_order_exit(position, now)
+            if resting is not None:
+                price, reason = resting
+                self._submit_exit_and_simulate(position.ticker, position.shares, snapshot.bid)
+                trade = self.position_manager.close_position(position.ticker, now, price, reason)
+                self.trade_journal.record(trade)
+                self.risk_manager.record_trade_result(trade.net_profit or 0.0, now, position.ticker)
+                continue
             action = self.position_manager.manage(
                 position.ticker,
                 current_price=snapshot.last_price,
@@ -547,6 +556,39 @@ class TradingBot:
         if sold:
             self._last_exit_fill_price = proceeds / sold
         return sold
+
+    def _resting_order_exit(self, position, now: datetime):
+        """Simulation only: the stop and target as orders resting at a broker, filled when
+        the newest bar's low or high reaches them, not only when it CLOSES beyond them.
+
+        Returns (fill price, reason) or None. A stop fills at the stop, or at the bar's open
+        if the bar opened through it; a target fills at the target, or the open if it opened
+        above. The stop is checked first, the conservative assumption when one bar touches
+        both. The levels are those set at the previous close; breakeven, trailing and the
+        partial still update on each close in manage().
+
+        Why (docs/BACKTEST_RESULTS.md, 1-minute study): the old model triggered stops only
+        on 5-minute closes yet booked them at the stop level. No real order does both, and
+        measured against 1-minute data it overstated gross P&L by 60-92%. Only the simulated
+        broker uses this. A real broker's exits happen at real prices already."""
+        exit_model = self.config.strategy["trade_management"].get("exit_model", "close_at_level")
+        if exit_model != "resting_orders" or not isinstance(self.broker, PaperBrokerAdapter):
+            return None
+        bars = session_bars(self.data_provider.get_state(position.ticker).bars, now)
+        if not bars:
+            return None
+        bar = bars[-1]
+        if bar.timestamp <= position.entry_time:
+            return None                       # the entry bar: the position did not exist yet
+        if self._resting_checked.get(position.ticker) == bar.timestamp:
+            return None                       # each bar is tested once
+        self._resting_checked[position.ticker] = bar.timestamp
+        if bar.low <= position.current_stop:
+            reason = ExitReason.TRAILING_STOP if position.breakeven_moved else ExitReason.STOP_HIT
+            return min(position.current_stop, bar.open), reason
+        if bar.high >= position.current_target:
+            return max(position.current_target, bar.open), ExitReason.TARGET_HIT
+        return None
 
     def _exit_price(self, modelled: float) -> float:
         """The price to book an exit at. The simulator keeps the modelled price, so
