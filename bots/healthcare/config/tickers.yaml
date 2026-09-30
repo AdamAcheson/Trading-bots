@@ -1,0 +1,669 @@
+# Healthcare bot universe: the 60 stocks the user chose on 2026-09-30.
+# Rules and test plan: bots/healthcare/RULES.md (pre-registered).
+#
+# Every stock has the same settings (RULES.md section 3):
+#   benchmark XLV; max_spread_pct 0.15; overnight_category manual_only, i.e. never
+#   held overnight -- NOT the same as manual_only: false below, which keeps the
+#   stock auto-tradeable; profit_target_pct [1.5, 3.0] (variant H1's fixed 2.25%
+#   target, ignored when a run sets scale_target_with_stop); volatility normal.
+
+tickers:
+  A:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ABBV:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ABT:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ALGN:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  AMGN:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  BAX:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  BDX:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  BIIB:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  BMY:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  BSX:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CAH:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CI:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CNC:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  COO:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  COR:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CRL:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CVS:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  DGX:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  DHR:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  DVA:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  DXCM:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ELV:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  EW:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  GEHC:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  GILD:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  HCA:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  HSIC:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  HUM:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  IDXX:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ILMN:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  INCY:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  IQV:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ISRG:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  JNJ:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  LH:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  LLY:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MCK:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MDT:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MRK:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MRNA:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MTD:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  PFE:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  PODD:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  REGN:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  RMD:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  RVTY:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  SOLV:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  STE:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  SYK:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  TECH:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  TMO:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  UHS:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  UNH:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  VEEV:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  VRTX:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  VTRS:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  WAT:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  WST:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ZBH:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  ZTS:
+    benchmark: XLV
+    sector: healthcare
+    strategy: healthcare
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal

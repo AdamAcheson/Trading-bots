@@ -75,6 +75,15 @@ def evaluate_ticker(ctx: EvaluationContext, strategy_config: dict, risk_config: 
     if ctx.manual_only:
         return reject(RejectionReason.REJECTED_MANUAL_ONLY)
 
+    # Earnings-day stand-in (off unless configured): no entry at all in a stock that
+    # opened this far from its prior close, up or down. Free earnings calendars are
+    # not available, and large companies mostly report before the open, so an
+    # earnings day nearly always shows up as a gap; other big-news days are skipped too.
+    skip_gap = strategy_config["eligibility"].get("skip_gap_day_pct")
+    if (skip_gap and ctx.snapshot.overnight_gap_pct is not None
+            and abs(ctx.snapshot.overnight_gap_pct) >= skip_gap):
+        return reject(RejectionReason.REJECTED_GAP_DAY)
+
     bench_cfg = strategy_config["benchmark_confirmation"]
     bench_result = benchmark_confirmation(
         ctx.benchmark_snapshot,

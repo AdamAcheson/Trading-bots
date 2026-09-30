@@ -1,3 +1,7 @@
+# HEALTHCARE BOT copy of config/strategy.yaml. The ONLY intended difference is
+# eligibility.skip_gap_day_pct (4.0 here, off in the mining config); see
+# bots/healthcare/RULES.md. tests/test_healthcare_config.py fails if anything else drifts.
+
 # Strategy parameters. See docs/ARCHITECTURE.md section 5 for schema notes.
 
 candle_timeframe: 5m   # architecture supports adding 1m later without changing the schema
@@ -48,7 +52,7 @@ eligibility:
   # Skip a stock for the whole day when it opens at least this % away from the prior
   # close, up or down (null = off). The healthcare bot's stand-in for an earnings
   # calendar, which Twelve Data's free plan does not provide (bots/healthcare/RULES.md).
-  skip_gap_day_pct: null
+  skip_gap_day_pct: 4.0
 
 chase_rule:
   max_consecutive_large_green_candles: 3

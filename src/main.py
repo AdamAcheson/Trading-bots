@@ -187,6 +187,7 @@ class TradingBot:
         self._reported_discrepancies: set = set()
         self._last_exit_fill_price: Optional[float] = None
         self._resting_checked: Dict[str, datetime] = {}
+        self.min_shares_skips = 0
 
     def _snapshot_for(self, ticker: str, now: datetime) -> Optional[IndicatorSnapshot]:
         state = self.data_provider.get_state(ticker)
@@ -342,6 +343,13 @@ class TradingBot:
         # trims -- $2,500 down to $2,400 after a losing day -- still go through.
         min_fraction = self.config.risk["sizing"].get("min_trimmed_fraction", 0.0)
         if shares < min_fraction * sizing.shares:
+            return
+        # Too few shares to manage (off unless configured): the 35% partial exit rounds
+        # to nothing on a 1-2 share position, which is what a $2,500 position in a
+        # $1,000+ stock comes to.
+        min_shares = self.config.risk["sizing"].get("min_shares")
+        if min_shares and shares < min_shares:
+            self.min_shares_skips += 1
             return
         if shares != sizing.shares:
             sizing = replace(sizing, shares=shares, capped_by=capped_by)

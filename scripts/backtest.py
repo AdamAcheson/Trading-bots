@@ -118,6 +118,17 @@ def main() -> int:
              "Mutually exclusive with --days.",
     )
     parser.add_argument(
+        "--start-date", type=str, default=None, metavar="YYYY-MM-DD",
+        help="Only backtest sessions on or after this date (applied after --days/--first-days/"
+             "--end-offset). Needed when the universe's history is shorter than its benchmark's: "
+             "the session list is the union over every symbol, so a count-based window would "
+             "include benchmark-only days.",
+    )
+    parser.add_argument(
+        "--end-date", type=str, default=None, metavar="YYYY-MM-DD",
+        help="Only backtest sessions on or before this date.",
+    )
+    parser.add_argument(
         "--end-offset", type=int, default=0,
         help="Drop the most recent N trading days before applying --days. Combined with --days "
              "this selects an arbitrary window, which is what a train/test split needs: "
@@ -554,6 +565,13 @@ def main() -> int:
         all_days = all_days[-args.days:]
     elif args.first_days:
         all_days = all_days[:args.first_days]
+    if args.start_date:
+        all_days = [d for d in all_days if d >= args.start_date]
+    if args.end_date:
+        all_days = [d for d in all_days if d <= args.end_date]
+    if not all_days:
+        print("no sessions in the requested date range", file=sys.stderr)
+        return 1
     if args.regime_filter:
         from data.market_regime import qualifying_days
         symbols = [s.strip() for s in args.regime_symbols.split(",") if s.strip()]
@@ -658,6 +676,8 @@ def main() -> int:
     print(f"Period: {all_days[0]} to {all_days[-1]} ({len(all_days)} trading days)")
     print(f"Entry candidates: {entries}")
     print(f"Trades closed: {len(all_trades)}")
+    if bot.config.risk["sizing"].get("min_shares"):
+        print(f"Entries skipped by the {bot.config.risk['sizing']['min_shares']}-share minimum: {bot.min_shares_skips}")
 
     report = generate_daily_report(
         date=f"{all_days[0]}_to_{all_days[-1]}",

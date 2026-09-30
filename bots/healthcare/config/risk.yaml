@@ -1,3 +1,7 @@
+# HEALTHCARE BOT copy of config/risk.yaml. The ONLY intended difference is
+# sizing.min_shares (5 here, off in the mining config); see bots/healthcare/RULES.md.
+# tests/test_healthcare_config.py fails if anything else drifts.
+
 # Risk / money-management parameters. See docs/ARCHITECTURE.md section 6.
 # Nothing here is a final production setting -- these are paper-trading defaults meant
 # to be swept/tested via the daily/cumulative reports (spec section 15/16).
@@ -36,7 +40,7 @@ sizing:
   # Skip an entry sized below this many shares (null = off). Used by the healthcare
   # bot (bots/healthcare/RULES.md): a $2,500 position in a $1,000+ stock is one or
   # two shares, too few for the 35% partial exit to sell anything.
-  min_shares: null
+  min_shares: 5
 
 stops:
   atr_multiplier:
