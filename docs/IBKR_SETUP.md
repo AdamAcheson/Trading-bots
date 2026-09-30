@@ -64,6 +64,10 @@ one TWS connection.
 * Quotes: `reqMktData` after `reqMarketDataType(3)`, which returns live data where
   subscribed and delayed data otherwise. No valid bid and ask means no quote, and
   the bot does not trade that symbol. No quote is ever made up.
+* **Partial subscriptions (2026-09-30).** NYSE, NYSE American, Nasdaq and Arca data
+  are sold separately. If some symbols stay delayed while the rest are live, those
+  symbols get no quote and are not traded; the summary lists them as STILL DELAYED and
+  the heartbeat's data line counts them.
 * The startup summary says **LIVE** or **DELAYED**. Delayed prices only test the
   plumbing: entries and exits are decided on 15-minute-old prices, so an exit
   limited at a stale bid can miss and print EXIT INCOMPLETE.

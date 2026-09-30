@@ -437,7 +437,8 @@ def test_health_counts_what_the_bot_can_use():
     h = p.health(["AG", "HL"], clock.t, 30)
     assert h == {"symbols": 2, "streaming": 2, "bars_today": 2, "quotes": 0,
                  "quotes_from_bars": 2, "fresh": 2,
-                 "oldest_newest_bar": datetime(2026, 9, 24, 9, 40, tzinfo=ET)}
+                 "oldest_newest_bar": datetime(2026, 9, 24, 9, 40, tzinfo=ET),
+                 "delayed_symbols": 0}
     line = _run_bot().health_line(p, ["AG", "HL"], clock.t, 30)
     assert "quotes 0/2 + 2 from bars" in line and "fresh 2/2" in line
 
@@ -631,3 +632,45 @@ def test_live_quotes_arriving_keep_the_feed_live():
     p.subscribe(["CDE"])
     clock.t += timedelta(minutes=30)
     assert p.data_delayed() is False
+
+
+# --- a live feed that does not cover every symbol (2026-09-30) ----------------------
+
+class MixedIB(FakeIB):
+    """Live subscription for AG's exchange only: SIL still arrives delayed, WITH a bid
+    and ask, 15 minutes old."""
+    def reqMktData(self, contract, *a):
+        mdt = 1 if contract.symbol == "AG" else 3
+        return SimpleNamespace(bid=18.69, ask=18.71, last=18.70, marketDataType=mdt,
+                               time=datetime(2026, 9, 24, 14, 0, 5, tzinfo=UTC))
+
+
+def test_a_symbol_still_delayed_on_a_live_feed_gets_no_quote():
+    p, _, _ = _provider(MixedIB())
+    p.subscribe(["AG", "SIL"])
+    p.poll("AG")
+    p.poll("SIL")
+    assert p.data_delayed() is False
+    assert p.get_state("AG").quote is not None
+    assert p.get_state("SIL").quote is None           # not traded on a 15-minute-old quote
+    assert p.delayed_symbols == {"SIL"}
+
+
+def test_the_still_delayed_symbols_are_reported():
+    run_bot = _run_bot()
+    p, _, clock = _provider(MixedIB())
+    p.subscribe(["AG", "SIL"])
+    p.poll("AG")
+    p.poll("SIL")
+    assert any("STILL DELAYED:     SIL" in line for line in run_bot.ibkr_data_report(p))
+    assert "1 still delayed (not traded)" in run_bot.health_line(p, ["AG", "SIL"], clock.t, 30)
+
+
+def test_a_fully_live_feed_reports_nothing_delayed():
+    run_bot = _run_bot()
+    p, _, clock = _provider()
+    p.subscribe(["AG"])
+    p.poll("AG")
+    assert p.get_state("AG").quote is not None
+    assert not any("STILL DELAYED" in line for line in run_bot.ibkr_data_report(p))
+    assert "still delayed" not in run_bot.health_line(p, ["AG"], clock.t, 30)

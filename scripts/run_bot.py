@@ -151,6 +151,10 @@ def ibkr_data_report(provider, scale_summary=None):
         lines.append("                     entries and exits are decided on stale prices.")
     else:
         lines.append("  Prices:            LIVE")
+        late = sorted(getattr(provider, "delayed_symbols", ()))
+        if late:
+            lines.append(f"  STILL DELAYED:     {', '.join(late)} -- not covered by the subscription; "
+                         "these are not traded")
     if provider.failed:
         lines.append(f"  NO DATA:           {', '.join(f'{s} ({e})' for s, e in sorted(provider.failed.items()))}")
     if scale_summary is not None:
@@ -176,8 +180,9 @@ def health_line(provider, symbols, now, staleness_limit):
     # clock: ~5 minutes behind live, ~20 behind delayed. A time that stops moving
     # means the feed has frozen, as it did unnoticed all day on 2026-09-25.
     lag = f", newest bar {newest:%H:%M}" if newest else ""
+    late = f", {h['delayed_symbols']} still delayed (not traded)" if h.get("delayed_symbols") else ""
     return (f"data: bars today {h['bars_today']}/{n} (streaming {h['streaming']}), "
-            f"quotes {h['quotes']}/{n}{from_bars}, fresh {h['fresh']}/{n}{lag}")
+            f"quotes {h['quotes']}/{n}{from_bars}{late}, fresh {h['fresh']}/{n}{lag}")
 
 
 def main() -> int:

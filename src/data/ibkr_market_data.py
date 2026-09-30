@@ -101,6 +101,7 @@ class IBKRMarketDataProvider(MarketDataProvider):
         self._subscribed_at: Optional[datetime] = None
         self._synthetic_spread_pct = synthetic_spread_pct
         self.synthetic_quotes: set = set()
+        self.delayed_symbols: set = set()     # still delayed while the feed is live
 
     # --- setup -------------------------------------------------------------------
     def subscribe(self, symbols: List[str]) -> None:
@@ -184,9 +185,22 @@ class IBKRMarketDataProvider(MarketDataProvider):
         t = self._tickers[symbol]
         bid, ask, last = _valid(t.bid), _valid(t.ask), _valid(t.last)
         quote_time = getattr(t, "time", None)
-        delayed = self.data_delayed() is True
+        feed_delayed = self.data_delayed()
+        delayed = feed_delayed is True
         self.synthetic_quotes.discard(symbol)
-        if bid and ask and ask >= bid:
+        # A live subscription can cover some exchanges and not others (NYSE, NYSE
+        # American, Nasdaq and Arca are sold separately). Then the feed reads LIVE while
+        # a few symbols still arrive 15 minutes late, and their quotes would pass for
+        # current ones. Such a symbol gets no quote, so the bot does not trade it.
+        stale_symbol = (feed_delayed is False
+                        and getattr(t, "marketDataType", None) in DELAYED_TYPES)
+        if stale_symbol:
+            self.delayed_symbols.add(symbol)
+        else:
+            self.delayed_symbols.discard(symbol)
+        if stale_symbol:
+            state.quote = None
+        elif bid and ask and ask >= bid:
             stamp = quote_time or wall
             state.quote = Quote(bid=bid, ask=ask, last=last or (bid + ask) / 2, timestamp=stamp)
         elif delayed and self._synthetic_spread_pct and raw and _valid(raw[-1].close):
@@ -246,7 +260,8 @@ class IBKRMarketDataProvider(MarketDataProvider):
         """How many symbols the bot can actually evaluate right now, and why not."""
         today = now.astimezone(ET).date()
         out = {"symbols": len(symbols), "streaming": 0, "bars_today": 0, "quotes": 0,
-               "quotes_from_bars": 0, "fresh": 0, "oldest_newest_bar": None}
+               "quotes_from_bars": 0, "fresh": 0, "oldest_newest_bar": None,
+               "delayed_symbols": sum(1 for s in symbols if s in self.delayed_symbols)}
         for s in symbols:
             st = self._inner.get_state(s)
             out["streaming"] += 1 if self._streaming.get(s) else 0
