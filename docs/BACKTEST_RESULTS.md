@@ -2537,5 +2537,5 @@ realistic exits. With settled cash only, one $5,000 position is also one trade a
 
 Fewer orders cut commission, and in the 2026 silver rally that was enough to turn a
 profit. Over 2023-2025 the day's first signal lost money even before commission. The
-after-commission loss there is the only result in this document whose 95% interval is
-entirely below zero. Rejected.
+after-commission loss there has a 95% interval entirely below zero: a real loss, not
+noise. Rejected.
