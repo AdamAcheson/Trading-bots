@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Compare backtest journals after costs, per session, with a paired daily bootstrap.
 
-Net P&L is the journal's (modelled spread cost included) minus an approximate IBKR Pro
-Tiered commission per trade: two orders, each min(max($0.35, $0.0035/sh), 1% of value)
-plus ~$0.0032/sh clearing and exchange fees, plus FINRA TAF on the sale. Partial exits send
-a third order this does not count.
+Net P&L after IBKR Pro Tiered commission. Journals written since 2026-09-30 carry a
+`broker_commission` field: the backtest charged the commission itself (config/risk.yaml
+transaction_costs, every order including partial exits), so their net is used as is.
+Older journals only include the modelled spread cost; for those an approximation is
+subtracted per trade: two orders, each min(max($0.35, $0.0035/sh), 1% of value) plus
+~$0.0032/sh clearing and exchange fees, plus FINRA TAF on the sale. That approximation
+misses the third order a partial exit sends.
 
 Usage:
     python3 scripts/compare_runs.py --first 2023-09-05 --last 2025-12-08 BASE_TAG TAG [TAG ...]
@@ -36,7 +39,8 @@ def daily(tag, sessions):
     trades = [json.loads(l) for l in open(os.path.join(ROOT, "reports", f"backtest_trades{tag}.jsonl"))]
     for t in trades:
         if t["date"] in by_day:
-            by_day[t["date"]] += t["net_profit"] - tiered(t["shares"], t["entry_price"])
+            extra = 0.0 if "broker_commission" in t else tiered(t["shares"], t["entry_price"])
+            by_day[t["date"]] += t["net_profit"] - extra
     return trades, by_day
 
 
@@ -68,7 +72,8 @@ def main(argv=None) -> int:
     print(f"{'tag':14} {'trades':>6} {'win%':>6} {'avg R':>7} {'>=3R':>5} {'net':>10} {'after comm':>11} {'/session':>9} {'vs base':>9}")
     for tag in a.tags:
         trades, d = daily(tag, sessions)
-        net = sum(t["net_profit"] for t in trades if t["date"] in d)
+        # before broker commission, for both kinds of journal
+        net = sum(t["net_profit"] + t.get("broker_commission", 0.0) for t in trades if t["date"] in d)
         after = sum(d.values())
         inside = [t for t in trades if t["date"] in d]
         wins = sum(1 for t in inside if t["net_profit"] > 0)

@@ -8,6 +8,8 @@ traded notional is in sub-$10 miners where a penny is 10+ bps.
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
+import pytest
+
 from execution.costs import TransactionCostModel
 
 
@@ -61,3 +63,55 @@ def test_from_config_reads_the_shipped_defaults():
 
 def test_from_config_tolerates_a_missing_section():
     assert not TransactionCostModel.from_config({}).enabled
+
+
+# --- IBKR Pro Tiered commission (config/risk.yaml, from 2026-09-30) ---------------
+
+def _ibkr():
+    return TransactionCostModel(commission_per_share=0.0035, commission_min_per_order=0.35,
+                                commission_max_pct_of_value=1.0, fees_per_share=0.0032,
+                                sell_fees_per_share=0.000166)
+
+
+def test_per_share_rate_above_the_minimum():
+    # 125 shares of a $20 stock: 125 x $0.0035 = $0.4375, plus 125 x $0.0032 fees
+    assert _ibkr().commission(20.0, 125) == pytest.approx(0.4375 + 0.40)
+
+
+def test_minimum_per_order_for_a_small_share_count():
+    # 16 shares of a $150 stock: 16 x $0.0035 = $0.056, raised to the $0.35 minimum
+    assert _ibkr().commission(150.0, 16) == pytest.approx(0.35 + 16 * 0.0032)
+
+
+def test_one_percent_cap_matches_what_the_paper_account_charged():
+    """2026-09-24, DUT160852: a 1-share $18.69 order was charged $0.19. The $0.35
+    minimum is capped at 1% of the order's value, $0.187."""
+    assert round(_ibkr().commission(18.69, 1), 2) == 0.19
+
+
+def test_sales_pay_the_finra_fee_and_buys_do_not():
+    m = _ibkr()
+    assert m.commission(20.0, 125, sell=True) - m.commission(20.0, 125) == pytest.approx(125 * 0.000166)
+
+
+def test_a_partial_exit_is_a_third_order_with_its_own_minimum():
+    from datetime import datetime, timezone
+    from models.trade import ExitReason
+    from positions.position_manager import PositionManager
+    t0 = datetime(2026, 3, 2, 15, 0, tzinfo=timezone.utc)
+    m = _ibkr()
+    pm = PositionManager(10, cost_model=m)
+    pos = pm.open_position("XYZ", "XLV", t0, 150.0, 16, 149.0, 153.0, "VWAP_RECLAIM", 80.0)
+    pos.apply_partial_exit(t0, 151.5, 5, "partial_target_1_5R")
+    trade = pm.close_position("XYZ", t0, 152.0, ExitReason.TRAILING_STOP)
+    expected = m.commission(150.0, 16) + m.commission(151.5, 5, sell=True) + m.commission(152.0, 11, sell=True)
+    assert trade.broker_commission == pytest.approx(expected)
+    assert trade.broker_commission > 3 * 0.35
+    assert trade.gross_profit - trade.net_profit == pytest.approx(expected)
+
+
+def test_shipped_config_charges_ibkr_pro_tiered():
+    from config_loader import load_config
+    m = TransactionCostModel.from_config(load_config().risk)
+    assert (m.commission_per_share, m.commission_min_per_order, m.commission_max_pct_of_value) == (0.0035, 0.35, 1.0)
+    assert m.fees_per_share == 0.0032 and m.sell_fees_per_share == 0.000166

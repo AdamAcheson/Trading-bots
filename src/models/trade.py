@@ -104,6 +104,9 @@ class Trade:
     score_components: Optional[dict] = None
     setup_type: Optional[str] = None
     overnight_yes_no: bool = False
+    # The broker's commission and fees within (gross_profit - net_profit); the rest
+    # is modelled spread and impact. Absent from journals written before 2026-09-30.
+    broker_commission: float = 0.0
 
     def close(self, exit_time: datetime, exit_price: float, reason: ExitReason,
               commission: float = 0.0, benchmark_return: Optional[float] = None,

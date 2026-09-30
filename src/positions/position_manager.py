@@ -214,14 +214,21 @@ class PositionManager:
         )
         trade.maximum_favorable_excursion = position.maximum_favorable_excursion
         trade.maximum_adverse_excursion = position.maximum_adverse_excursion
+        # One buy, then one sell per partial exit and a final sell for what is left.
+        # Each is its own order, so a per-order commission minimum applies to each.
+        partials = [(p.price, p.shares) for p in position.partial_exits]
+        remaining = max(position.original_shares - sum(s for _, s in partials), 0)
+        orders = [(position.entry_price, position.original_shares, False)]
+        orders += [(price, shares, True) for price, shares in partials]
+        orders.append((exit_price, remaining, True))
+        cm = self.cost_model
         trade.close(
             exit_time, exit_price, exit_reason,
-            commission=self.cost_model.round_trip(
-                position.entry_price, exit_price, position.original_shares
-            ),
+            commission=sum(cm.per_side(price, shares, sell) for price, shares, sell in orders),
             benchmark_return=benchmark_return,
-            partial_exits=[(p.price, p.shares) for p in position.partial_exits],
+            partial_exits=partials,
         )
+        trade.broker_commission = sum(cm.commission(price, shares, sell) for price, shares, sell in orders)
 
         self.transition(ticker, TradeState.CLOSED)
         self.transition(ticker, TradeState.WATCHING)
