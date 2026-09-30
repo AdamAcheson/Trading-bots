@@ -2520,3 +2520,22 @@ here supports trading real money.
 
 The healthcare bot's best variant, H1, re-run the same way: -$709.93 over 232 tuning
 sessions (bots/healthcare/RULES.md).
+
+## One $5,000 trade a day instead of two at $2,500: REJECTED (2026-09-30)
+
+Asked by the account holder. Rule stated before the runs: it counts only if it makes
+money after commission in both periods. Run with `--max-position-size-dollars 5000
+--max-position-pct-equity 1.0 --max-concurrent-positions 1`, IBKR Pro Fixed commission,
+realistic exits. With settled cash only, one $5,000 position is also one trade a day.
+
+| Period | Setup | Trades | Before commission | After commission | Per session, 95% interval |
+|---|---|---|---|---|---|
+| Holdout 2023-09-05..2025-12-08 | 2 x $2,500 | 672 | +$347.96 | -$1,172.30 | -$2.07 |
+| | **1 x $5,000** | 411 | -$533.75 | **-$1,677.75** | -$2.96 [-$5.58, -$0.38] |
+| Tuning 2025-12-15..2026-09-22 | 2 x $2,500 | 287 | +$475.08 | -$186.73 | -$0.97 |
+| | **1 x $5,000** | 173 | +$789.75 | **+$337.41** | +$1.75 [-$4.18, +$8.57] |
+
+Fewer orders cut commission, and in the 2026 silver rally that was enough to turn a
+profit. Over 2023-2025 the day's first signal lost money even before commission. The
+after-commission loss there is the only result in this document whose 95% interval is
+entirely below zero. Rejected.
