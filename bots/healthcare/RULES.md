@@ -143,3 +143,31 @@ because Lite has no API.
   each. The three half-day sessions are also short, as expected. At the 2026-09-29 close,
   seven stocks were above $500 and so are effectively out of reach under the 5-share
   rule: LLY, IDXX, MCK, MTD, REGN, TMO and VRTX.
+- **2026-09-30, regression check passed.** With the gap-day skip and share minimum built
+  (both off in the mining config), the mining tuning backtest reproduced its recorded
+  result exactly: 287 identical trades, $475.08 net.
+
+## Result: tuning, 2026-09-30 -- no variant is profitable after commission; STOP
+
+232 sessions, 2025-04-29 to 2026-03-31. Net after the modelled spread cost and the
+approximate IBKR Pro Tiered commission (`scripts/compare_runs.py`):
+
+| Variant | Trades | Win % | Avg R | Net before commission | After commission | Per session |
+|---|---|---|---|---|---|---|
+| H1 fixed 2.25%, floor 0.5% | 367 | 47.4 | +0.028 | +$87.46 | -$250.46 | -$1.08 |
+| H2 fixed 2.25%, floor 0.3% | 366 | 44.8 | -0.011 | -$70.63 | -$405.65 | -$1.75 |
+| H3 1.75R, floor 0.5% | 367 | 47.7 | +0.006 | -$18.40 | -$355.31 | -$1.53 |
+| H4 1.75R, floor 0.3% | 367 | 45.0 | -0.035 | -$141.22 | -$475.78 | -$2.05 |
+| H5 2.5R, floor 0.5% | 367 | 47.7 | +0.017 | +$36.79 | -$300.14 | -$1.29 |
+| H6 2.5R, floor 0.3% | 367 | 45.0 | -0.027 | -$112.83 | -$447.78 | -$1.93 |
+
+24-26 entries per variant were skipped by the 5-share minimum.
+
+Per section 6, a variant must be above zero after commission in tuning before the
+holdout may be run. None is, so **the holdout (2026-04-01 to 2026-09-29) was not run and
+stays unseen**. Verdict: this strategy, on this universe, has no edge after costs. The
+best variant makes about $0.24 per trade before commission, against about $0.92 per trade
+in commission. The 0.3% stop floor was worse than 0.5% in every pairing.
+
+Changing the rules now to find a variant that passes would be tuning on these results.
+Any new attempt needs a new, dated pre-registration.
