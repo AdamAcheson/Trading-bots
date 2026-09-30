@@ -130,3 +130,16 @@ because Lite has no API.
 3. **Regression check:** after both features exist, the mining tuning backtest must still
    reproduce its recorded result exactly (`rest_t`: 287 trades, $475.08 net). If it does
    not, the features changed something they should not have, and that is fixed first.
+
+## Notes added after writing (no rule changes)
+
+- **2026-09-30, earnings dates.** Twelve Data's `/earnings` and `/earnings_calendar`
+  endpoints return 403 on the free plan ("available exclusively with grow or pro ...
+  plans"). As section 3 specified in advance, the earnings-day rule therefore uses the
+  gap proxy: skip a stock for the day when it opens 4% or more away from the prior close.
+- **2026-09-30, data.** All 60 stocks have 5-minute bars for all 377 sessions from
+  2025-03-31 to 2026-09-29. A few days have fewer than 75 bars because some 5-minute
+  intervals had no trades: MTD on 23 days, STE on 3, and PODD, LH, UHS and WST on 1
+  each. The three half-day sessions are also short, as expected. At the 2026-09-29 close,
+  seven stocks were above $500 and so are effectively out of reach under the 5-share
+  rule: LLY, IDXX, MCK, MTD, REGN, TMO and VRTX.
