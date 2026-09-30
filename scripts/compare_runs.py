@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Compare backtest journals after costs, per session, with a paired daily bootstrap.
 
-Net P&L after IBKR Pro Tiered commission. Journals written since 2026-09-30 carry a
+Net P&L after IBKR Pro Fixed commission. Journals written since 2026-09-30 carry a
 `broker_commission` field: the backtest charged the commission itself (config/risk.yaml
 transaction_costs, every order including partial exits), so their net is used as is.
 Older journals only include the modelled spread cost; for those an approximation is
-subtracted per trade: two orders, each min(max($0.35, $0.0035/sh), 1% of value) plus
-~$0.0032/sh clearing and exchange fees, plus FINRA TAF on the sale. That approximation
-misses the third order a partial exit sends.
+subtracted per trade: two orders, each min(max($1.00, $0.005/sh), 1% of value) (IBKR Pro
+Fixed, exchange fees included), plus FINRA TAF on the sale. That approximation misses the
+third order a partial exit sends. Results recorded before 2026-09-30 used the cheaper
+Tiered approximation, min(max($0.35, $0.0035/sh), 1%) + $0.0032/sh.
 
 Usage:
     python3 scripts/compare_runs.py --first 2023-09-05 --last 2025-12-08 BASE_TAG TAG [TAG ...]
@@ -29,8 +30,8 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 from data.historical_data import get_bars, group_bars_by_day  # noqa: E402
 
 
-def tiered(shares, price):
-    order = min(max(0.35, 0.0035 * shares), 0.01 * shares * price) + shares * 0.0032
+def fixed(shares, price):
+    order = min(max(1.00, 0.005 * shares), 0.01 * shares * price)
     return 2 * order + 0.000166 * shares
 
 
@@ -39,7 +40,7 @@ def daily(tag, sessions):
     trades = [json.loads(l) for l in open(os.path.join(ROOT, "reports", f"backtest_trades{tag}.jsonl"))]
     for t in trades:
         if t["date"] in by_day:
-            extra = 0.0 if "broker_commission" in t else tiered(t["shares"], t["entry_price"])
+            extra = 0.0 if "broker_commission" in t else fixed(t["shares"], t["entry_price"])
             by_day[t["date"]] += t["net_profit"] - extra
     return trades, by_day
 

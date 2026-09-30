@@ -110,8 +110,16 @@ def test_a_partial_exit_is_a_third_order_with_its_own_minimum():
     assert trade.gross_profit - trade.net_profit == pytest.approx(expected)
 
 
-def test_shipped_config_charges_ibkr_pro_tiered():
+def test_shipped_config_charges_ibkr_pro_fixed():
+    """The account holder chose IBKR Pro Fixed on 2026-09-30: $0.005/share, $1.00
+    minimum, 1% cap, exchange fees included."""
     from config_loader import load_config
     m = TransactionCostModel.from_config(load_config().risk)
-    assert (m.commission_per_share, m.commission_min_per_order, m.commission_max_pct_of_value) == (0.0035, 0.35, 1.0)
-    assert m.fees_per_share == 0.0032 and m.sell_fees_per_share == 0.000166
+    assert (m.commission_per_share, m.commission_min_per_order, m.commission_max_pct_of_value) == (0.005, 1.00, 1.0)
+    assert m.fees_per_share == 0.0 and m.sell_fees_per_share == 0.000166
+    # 125 shares of a $20 stock: $0.625 raised to the $1.00 minimum
+    assert m.commission(20.0, 125) == pytest.approx(1.00)
+    # 400 shares: $2.00, above the minimum
+    assert m.commission(20.0, 400) == pytest.approx(2.00)
+    # still capped at 1% of value: the paper account's 1-share order
+    assert round(m.commission(18.69, 1), 2) == 0.19

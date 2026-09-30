@@ -113,29 +113,31 @@ emergency:
 #   impact_bps 0.0 assumes a $25k order moves the book not at all
 # See docs/BACKTEST_RESULTS.md -- even at this floor the strategy's edge is thin.
 #
-# COMMISSION: IBKR Pro, Tiered pricing (the live account is at IBKR; Lite is
-# commission-free but has no API, so a bot needs Pro). From 2026-09-30; before that
-# this was 0.0 (E*TRADE) and backtest net P&L excluded commission.
-#   $0.0035/share (the rate up to 300,000 shares a month; the $0.0005 end of IBKR's
-#   quoted range needs over 100 million shares a month), at least $0.35 and at most
-#   1% of the order's value, per order. The 1% cap is what the paper account charged
-#   on 2026-09-24: $0.19 on a 1-share $18.69 order.
-#   + fees_per_share 0.0032: exchange fee for taking liquidity (~$0.0030; the bot's
-#     orders are marketable) and clearing (~$0.0002). Charged on top under Tiered.
-#   + sell_fees_per_share 0.000166: FINRA trading activity fee, on sales only.
-#   Not modelled: the SEC fee on sales (a few cents on $2,500) and exchange rebates.
-# IBKR Pro Fixed ($0.005/share, $1.00 minimum per order, exchange fees included) costs
-# more at this account's order sizes: ~$1.00 vs ~$0.84 for 125 shares of a $20 stock,
-# and $1.00 vs ~$0.40 for 16 shares of a $150 stock.
+# COMMISSION: IBKR Pro, FIXED pricing, chosen by the account holder 2026-09-30. (The
+# live account is at IBKR; Lite is commission-free but has no API, so a bot needs Pro.)
+# Before 2026-09-30 this was 0.0 (E*TRADE) and backtest net P&L excluded commission.
+#   $0.005/share, at least $1.00 and at most 1% of the order's value, per order.
+#   Exchange and clearing fees are included in the Fixed rate (fees_per_share 0).
+#   + sell_fees_per_share 0.000166: FINRA trading activity fee, passed through on
+#     sales.
+#   Not modelled: the SEC fee on sales (a few cents on $2,500).
+# The 1% cap is what the paper account charged on 2026-09-24: $0.19 on a 1-share
+# $18.69 order.
+# For comparison, IBKR Pro Tiered is $0.0035/share (the rate for the first 300,000
+# shares a month), $0.35 minimum, 1% cap, plus ~$0.0032/share exchange and clearing
+# fees: commission_per_share 0.0035, commission_min_per_order 0.35,
+# fees_per_share 0.0032. At this account's order sizes Tiered is the cheaper plan:
+# ~$0.84 vs $1.00 for 125 shares of a $20 stock, ~$0.40 vs $1.00 for 16 shares of a
+# $150 stock.
 # Every order counts: a trade with a partial exit is three orders.
 transaction_costs:
   spread_ticks: 1.0
   impact_bps: 0.0
   commission_per_order: 0.0
-  commission_per_share: 0.0035
-  commission_min_per_order: 0.35
+  commission_per_share: 0.005
+  commission_min_per_order: 1.00
   commission_max_pct_of_value: 1.0
-  fees_per_share: 0.0032
+  fees_per_share: 0.0
   sell_fees_per_share: 0.000166
   # 1.0 = every fill crosses the spread. Exits always do (submit_exit_order sends
   # a marketable limit); assuming entries rest passively without adverse selection

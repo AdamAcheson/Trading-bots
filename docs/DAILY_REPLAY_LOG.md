@@ -23,9 +23,10 @@ All rows are SIMULATED replays of a finished session, not executed trades.
 Later rows use realistic `resting_orders` exits.
 
 **Commission included from 2026-09-30.** Earlier rows' net P&L includes only the
-modelled one-cent spread. From 2026-09-30 it also includes IBKR Pro Tiered commission
-and fees on every order (config/risk.yaml), which is what the paper account charges.
-A typical trade (125 shares of a $20 stock) costs about $1.70 more than before, about $1.96 with a partial exit. The
+modelled one-cent spread. From 2026-09-30 it also includes IBKR Pro Fixed commission
+($0.005/share, $1.00 minimum and 1% cap per order, config/risk.yaml) on every order.
+A typical trade (125 shares of a $20 stock) costs about $2.02 more than before, about
+$3.02 with a partial exit (a third order). The
 running tally below adds both kinds of row together.
 
 Backtest baselines to compare against (19-ticker holdout, 568 sessions):
