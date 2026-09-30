@@ -171,3 +171,11 @@ in commission. The 0.3% stop floor was worse than 0.5% in every pairing.
 
 Changing the rules now to find a variant that passes would be tuning on these results.
 Any new attempt needs a new, dated pre-registration.
+
+- **2026-09-30, commission model changed after the verdict (verdict unchanged).** The
+  table above subtracted an approximate Tiered commission. The account holder then
+  chose IBKR Pro Fixed ($0.005/share, $1.00 minimum per order, 1% cap), and the
+  backtester now charges it on every order, including partial exits. Re-running the
+  best variant, H1, with it: 367 trades, gross +$203.42, **net -$709.93** after spread
+  and commission (about -$3.06 per session). The other five were not re-run; Fixed
+  costs more than Tiered at these order sizes, so none can have become profitable.

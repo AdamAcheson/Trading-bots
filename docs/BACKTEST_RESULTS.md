@@ -2486,3 +2486,37 @@ because the fixed 3-5.5% target becomes a 1.5-2.8R target. Nothing in step 2 sho
 tradable edge. The shipped configuration is unchanged.
 
 **Running tally: 31 tested, 2 adopted, 1 bug fixed.**
+
+## IBKR Pro Fixed commission in the backtester: the strategy loses money after costs (2026-09-30)
+
+Until today the backtester charged no commission (E*TRADE's US-equity rate), and
+commission was only estimated afterwards by `scripts/compare_runs.py`. The live account
+is at IBKR, and the account holder chose IBKR Pro **Fixed** pricing: $0.005/share, $1.00
+minimum and 1% cap per order, exchange fees included, plus FINRA TAF on sales.
+`config/risk.yaml` now charges exactly that on every order, including the third order a
+partial exit sends, and each trade records `broker_commission`. The 1% cap reproduces the
+$0.19 the paper account charged for a 1-share order on 2026-09-24.
+
+The same trades as the realistic-exit baseline (the commission changes only the booked
+P&L and, through equity, later position sizes):
+
+| Period | Trades | Before commission (spread included) | After Fixed commission | Per session | 95% interval per session |
+|---|---|---|---|---|---|
+| Holdout, 2023-09-05 to 2025-12-08 | 672 | +$347.96 | **-$1,172.30** | -$2.07 | [-$4.25, +$0.08] |
+| Tuning, 2025-12-15 to 2026-09-22 | 287 | +$475.08 | **-$186.73** | -$0.97 | [-$5.34, +$4.24] |
+
+Commission is about $2.26 a trade on the holdout and $2.31 on the tuning period, against
+an average of $0.52 and $1.66 a trade before commission. At $2,500 a position the $1.00
+per-order minimum sets the cost; a partial exit adds a third $1.00.
+
+The earlier after-commission figures (holdout -$756, tuning +$48, and the compare_runs
+columns in the sections above) used an approximate Tiered rate and missed the third
+order. They understate the cost.
+
+**Conclusion.** With realistic exits and the commission the account will actually pay,
+the strategy loses money in both periods. The holdout's 90% lower bound is -$3.92 per
+session. Paper trading remains useful for checking fills against the simulation; nothing
+here supports trading real money.
+
+The healthcare bot's best variant, H1, re-run the same way: -$709.93 over 232 tuning
+sessions (bots/healthcare/RULES.md).
