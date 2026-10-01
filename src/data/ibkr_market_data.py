@@ -134,6 +134,14 @@ class IBKRMarketDataProvider(MarketDataProvider):
         self._bars[symbol] = bars or []
         self._fetched_at[symbol] = self._bars_updated_at[symbol] = self._clock()
 
+    def resubscribe(self, symbols: List[str]) -> None:
+        """After a reconnect: TWS has forgotten every subscription, so ask again."""
+        self.failed.clear()
+        self.stalled.clear()
+        self.synthetic_quotes.clear()
+        self.delayed_symbols.clear()
+        self.subscribe(symbols)
+
     def close(self) -> None:
         for symbol, bars in self._bars.items():
             try:

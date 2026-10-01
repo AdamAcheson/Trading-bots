@@ -674,3 +674,14 @@ def test_a_fully_live_feed_reports_nothing_delayed():
     assert p.get_state("AG").quote is not None
     assert not any("STILL DELAYED" in line for line in run_bot.ibkr_data_report(p))
     assert "still delayed" not in run_bot.health_line(p, ["AG"], clock.t, 30)
+
+
+def test_resubscribe_asks_tws_again_after_a_reconnect():
+    p, ib, _ = _provider()
+    p.subscribe(["AG"])
+    p.synthetic_quotes.add("AG")
+    p.resubscribe(["AG"])
+    assert ib.hist_calls == [("AG", True), ("AG", True)]
+    assert not p.synthetic_quotes
+    p.poll("AG")
+    assert p.get_state("AG").quote is not None

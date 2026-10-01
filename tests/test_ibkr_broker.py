@@ -522,3 +522,37 @@ def test_flatten_on_a_clean_account_does_nothing():
     ib = FlattenIB()
     code, text = _run_flatten(ib)
     assert code == 0 and "Nothing to clean up" in text and ib.placed == []
+
+
+# --- reconnecting after TWS goes away (2026-10-01) ---------------------------------
+
+def test_reconnect_restores_the_connection():
+    ib = FakeIB()
+    broker = IBKRPaperBrokerAdapter(CFG, ib=ib, sleep=lambda s: None)
+    ib.connected = False                     # TWS closed or restarted
+    assert not broker.is_connected()
+    assert broker.reconnect() is True
+    assert broker.is_connected()
+    assert ib.connect_kwargs["readonly"] is False
+
+
+def test_reconnect_reports_false_while_tws_is_still_down():
+    class DownIB(FakeIB):
+        def connect(self, host, port, **kw):
+            raise ConnectionRefusedError("TWS not running")
+    ib = FakeIB()
+    broker = IBKRPaperBrokerAdapter(CFG, ib=ib, sleep=lambda s: None)
+    broker.ib = DownIB()
+    assert broker.reconnect() is False
+
+
+def test_reconnect_refuses_a_tws_now_logged_into_a_live_account():
+    """The paper-only check runs on every connection, not just the first: if TWS comes
+    back logged into the live account, the bot must stop, not resume trading there."""
+    ib = FakeIB()
+    broker = IBKRPaperBrokerAdapter(CFG, ib=ib, sleep=lambda s: None)
+    ib.connected = False
+    ib.accounts = ["U7654321"]
+    with pytest.raises(IBKRSafetyError):
+        broker.reconnect()
+    assert not ib.connected

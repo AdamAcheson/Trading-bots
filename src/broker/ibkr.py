@@ -95,6 +95,11 @@ class IBKRPaperBrokerAdapter(BrokerInterface):
         self._contracts: Dict[str, object] = {}
         self._trades: Dict[str, object] = {}
 
+        self._wanted = wanted
+        self._connect()
+
+    def _connect(self) -> None:
+        """Connect and check, every time, that TWS is logged into paper accounts only."""
         # readonly=False is required to place orders; TWS's own "Read-Only API"
         # box must also be unticked.
         self.ib.connect(self.host, self.port, clientId=self.client_id, timeout=10, readonly=False)
@@ -105,10 +110,27 @@ class IBKRPaperBrokerAdapter(BrokerInterface):
             raise IBKRSafetyError(
                 f"TWS reports accounts {accounts or 'none'}; every one must be a paper "
                 f"account (id starting 'DU'). Log TWS into Paper Trading and try again.")
-        if wanted and wanted not in accounts:
+        if self._wanted and self._wanted not in accounts:
             self.ib.disconnect()
-            raise IBKRSafetyError(f"ibkr.account_id {wanted!r} is not among {accounts}.")
-        self.account = wanted or accounts[0]
+            raise IBKRSafetyError(f"ibkr.account_id {self._wanted!r} is not among {accounts}.")
+        self.account = self._wanted or accounts[0]
+
+    def reconnect(self) -> bool:
+        """Try once to reconnect after TWS went away (closed, restarted, logged out:
+        2026-10-01 the bot sat 'Not connected' all morning). False while TWS is still
+        unreachable. Raises IBKRSafetyError if TWS is now logged into a live account,
+        so the bot stops rather than trade it."""
+        try:
+            self.ib.disconnect()
+        except Exception:  # noqa: BLE001 -- already gone
+            pass
+        try:
+            self._connect()
+        except IBKRSafetyError:
+            raise
+        except Exception:  # noqa: BLE001 -- TWS not up yet: refused, timed out
+            return False
+        return bool(self.ib.isConnected())
 
     # --- helpers --------------------------------------------------------------
     def _contract(self, ticker: str):

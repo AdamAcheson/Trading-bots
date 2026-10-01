@@ -64,6 +64,13 @@ one TWS connection.
 * Quotes: `reqMktData` after `reqMarketDataType(3)`, which returns live data where
   subscribed and delayed data otherwise. No valid bid and ask means no quote, and
   the bot does not trade that symbol. No quote is ever made up.
+* **Reconnects on its own (2026-10-01).** That morning TWS went away after the bot
+  started and the bot printed "Not connected" for every symbol, every 30 seconds,
+  without trading. Now it prints one DISCONNECTED warning (repeated every 5 minutes,
+  naming any open position it cannot manage), retries every poll, and on success
+  re-subscribes the prices and prints RECONNECTED. Each reconnect re-checks that TWS
+  is logged into paper accounts only; if it comes back on a live account the bot
+  stops.
 * **Partial subscriptions (2026-09-30).** NYSE, NYSE American, Nasdaq and Arca data
   are sold separately. If some symbols stay delayed while the rest are live, those
   symbols get no quote and are not traded; the summary lists them as STILL DELAYED and

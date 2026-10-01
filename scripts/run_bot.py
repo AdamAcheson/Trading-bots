@@ -34,7 +34,7 @@ Usage:
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
@@ -271,11 +271,45 @@ def main() -> int:
     seen_trades = 0
     cycles = 0
     current_day = datetime.now(tz).date()
+    # Prices and orders share one TWS connection when both come from IBKR; only then
+    # can one reconnect restore both.
+    can_reconnect = (hasattr(bot.broker, "reconnect") and hasattr(provider, "resubscribe")
+                     and getattr(provider, "ib", None) is getattr(bot.broker, "ib", None))
+    lost_at = None
+    last_warning = None
 
     try:
         while True:
             now = datetime.now(tz)
             cycles += 1
+
+            if can_reconnect and not bot.broker.is_connected():
+                if lost_at is None:
+                    lost_at = now
+                if last_warning is None or now - last_warning >= timedelta(minutes=5):
+                    last_warning = now
+                    held = [p.ticker for p in bot.position_manager.open_positions()]
+                    print(f"[{now:%H:%M:%S}] DISCONNECTED from TWS since {lost_at:%H:%M}. No trading "
+                          f"until it is back. Check that TWS is open and logged into Paper Trading.")
+                    if held:
+                        print(f"[{now:%H:%M:%S}] NOT MANAGED while disconnected: {', '.join(held)} "
+                              f"(stops live in the bot, not at IBKR)")
+                try:
+                    back = bot.broker.reconnect()
+                except Exception as e:  # IBKRSafetyError: TWS is now on a live account
+                    print(f"[{now:%H:%M:%S}] STOPPING: {e}")
+                    raise KeyboardInterrupt from e      # same shutdown path as Ctrl+C
+                if back:
+                    provider.resubscribe(all_symbols)
+                    wait(3)
+                    print(f"[{datetime.now(tz):%H:%M:%S}] RECONNECTED to TWS "
+                          f"(down since {lost_at:%H:%M}); prices re-subscribed")
+                    for line in ibkr_data_report(provider):
+                        print(line)
+                    lost_at = last_warning = None
+                else:
+                    wait(poll_interval)
+                    continue
 
             if now.date() != current_day:
                 # Without this, RiskManager's daily counters (trades_today,
