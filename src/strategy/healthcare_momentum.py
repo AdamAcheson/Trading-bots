@@ -33,6 +33,10 @@ class Params:
     trail_atr: float = 1.25
     trail_after_r: float = 1.0
     half_spread: float = 0.005
+    # Variant B (MOMENTUM_RULES.md): drop the XLV item from the score; trade only on days
+    # DIA opens at least this many dollars above its prior close ($0.50 ~ 50 Dow points).
+    use_xlv: bool = True
+    dow_open_gap_min: Optional[float] = None
 
 
 # --- indicators (lists aligned with the input; None until defined) ---------------------
@@ -127,7 +131,7 @@ def score(r: Reading, xlv_bullish: bool, p: Params = Params()) -> Dict[str, floa
         "macd_above_signal": 10.0 if r.macd > r.macd_signal else 0.0,
         "macd_hist_positive": 10.0 if r.macd_hist > 0 else 0.0,
         "volume_confirmed": 12.5 if vol_ok else 0.0,
-        "xlv_bullish": 12.5 if xlv_bullish else 0.0,
+        "xlv_bullish": (12.5 if xlv_bullish else 0.0) if p.use_xlv else 0.0,
         "entry_quality": 15.0 if r.atr14 is not None and r.price <= r.ema9 + r.atr14 else 0.0,
     }
     parts["total"] = sum(parts.values())

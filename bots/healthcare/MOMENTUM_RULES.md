@@ -165,3 +165,23 @@ Same periods and the same pass rule as section 8. Variant B was chosen after sta
 result was seen, so stage 1 is no longer an untouched test for it: **the holdout
 (2026-04-01 to 2026-09-29) decides**, and is run only if variant B is profitable after
 all costs in stage 1.
+
+### Result: variant B, stage 1, 2026-10-02 -- FAIL; the holdout was not run
+
+`python3 scripts/backtest_healthcare_momentum.py --start 2025-04-29 --end 2026-03-31 --no-xlv --dow-open-gap 0.50 --tag hcm_s1_b`
+
+| | Original | Variant B |
+|---|---|---|
+| Days allowed to trade | 232 | 94 (Dow +50 open) |
+| Trades | 808 | 373 |
+| Win rate | 30.8% | 32.7% |
+| Average R before commission | +0.035 | +0.102 |
+| Gross, spread included | +$21.27 | +$120.89 |
+| Commission | $1,617.76 | $746.82 |
+| **Net** | **-$1,596.48** | **-$625.93** (-$2.70 a session; 90% lower bound -$3.75) |
+| Largest drawdown | -$1,612.19 | -$632.75 |
+
+Variant B loses less mainly because it trades less (40% of the days). Its trades are a
+little better before costs (+0.10R against +0.035R), but the average trade still makes
+about $0.32 before costs and pays $2.00 in commission. Not profitable after costs, so
+per the rule above the holdout stays unseen.

@@ -105,6 +105,14 @@ def run(start: str, end: str, tag: str, p: hm.Params = hm.Params()) -> dict:
     times = [f"{h:02d}:{m:02d}" for h in range(9, 16) for m in range(0, 60, 5)
              if (9, 30) <= (h, m) <= (15, 55)]
 
+    dow_days = None
+    if p.dow_open_gap_min is not None:
+        v = json.load(open(os.path.join(ROOT, "data_cache", "reference", "DIA_daily.json")))
+        dow_days = {v[i]["datetime"] for i in range(1, len(v))
+                    if float(v[i]["open"]) - float(v[i - 1]["close"]) >= p.dow_open_gap_min}
+        print(f"Dow filter: {sum(d in dow_days for d in days)}/{len(days)} sessions open "
+              f">= ${p.dow_open_gap_min:.2f} up on DIA")
+
     equity = p.account_size
     trades, daily_net, skips = [], {}, Counter()
     open_pos = {}
@@ -158,6 +166,8 @@ def run(start: str, end: str, tag: str, p: hm.Params = hm.Params()) -> dict:
 
             # 3. signals on this bar's close
             if not (p.first_signal_bar <= t <= p.last_signal_bar):
+                continue
+            if dow_days is not None and day not in dow_days:
                 continue
             j = xlv.index.get((day, t))
             xlv_ok = j is not None and hm.xlv_is_bullish(
@@ -259,8 +269,12 @@ def main(argv=None) -> int:
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", required=True)
     ap.add_argument("--tag", required=True)
+    ap.add_argument("--no-xlv", action="store_true", help="variant B: drop XLV from the score")
+    ap.add_argument("--dow-open-gap", type=float, default=None,
+                    help="variant B: trade only on days DIA opens this many $ above its prior close")
     a = ap.parse_args(argv)
-    report(run(a.start, a.end, a.tag))
+    p = hm.Params(use_xlv=not a.no_xlv, dow_open_gap_min=a.dow_open_gap)
+    report(run(a.start, a.end, a.tag, p), p)
     return 0
 
 

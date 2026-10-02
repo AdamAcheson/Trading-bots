@@ -122,3 +122,12 @@ def test_trailing_starts_at_plus_one_r_and_only_moves_up():
     pos.after_bar(101.0)
     assert pos.stop == pytest.approx(100.5)
     assert pos.open_risk == 0.0                            # locked in: frees risk budget
+
+
+def test_variant_b_drops_the_xlv_points():
+    pb = hm.Params(use_xlv=False)
+    assert hm.score(reading(), xlv_bullish=True, p=pb)["total"] == 87.5
+    # volume fails too: 75, still enough
+    assert hm.score(reading(bar_volume=5000), xlv_bullish=True, p=pb)["total"] == 75.0
+    # volume and one 10-point item fail: 65, no trade
+    assert hm.score(reading(bar_volume=5000, rsi14=70), xlv_bullish=True, p=pb)["total"] == 65.0
