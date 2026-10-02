@@ -130,3 +130,47 @@ justify real money by itself.
 - **Prior knowledge.** I have seen the recent price history of these sectors (for
   example the 2023-2026 rise of the miners) while analysing earlier bots. No swing-rule
   result has been looked at for any period.
+
+## Results, 2026-10-02
+
+Data note: two stray weekend rows in the Twelve Data downloads (CVS 2009-07-26, a
+zero-volume bar at 2.5x the price; one in PAAS) are dropped by the loader. No other
+cleaning. MRNA's +177% day on 2026-08-19 is real (the 5-minute data agrees; 199 million
+shares traded).
+
+### Stage 1 (to 2018-12-31; calendar starts 2007-08-31, the ETF's 200th day)
+
+| | Mining | Healthcare |
+|---|---|---|
+| $5,000 became | **$3,527 (-29.5%)** | **$16,519 (+230.4%, +11.1% a year)** |
+| Largest drawdown | -68.0% | -27.7% |
+| Sector ETF buy and hold | GDX -44.0% (drawdown -81.3%) | XLV +151.5% (drawdown -40.6%) |
+| Equal-weight universe | -34.0% (20 stocks) | +346.0% (52 stocks; survivorship-biased) |
+| Closed trades, win rate | 99, 34% | 144, 48% |
+| Commission | $204 | $297 |
+| Verdict | **FAIL** (not profitable) | **PASS** |
+
+Mining lost less than GDX, but stage 1 must be profitable, so **mining stops here**;
+its stage 2 was not run.
+
+### Stage 2, healthcare (2019-01-02 to 2026-09-30, the deciding test)
+
+| | |
+|---|---|
+| $5,000 became | **$3,565 (-28.7%, -4.3% a year)** |
+| Largest drawdown | -53.0% |
+| XLV buy and hold | +97.7% (largest drawdown -28.8%) |
+| Equal-weight universe (58 stocks) | +143.9% |
+| Closed trades, win rate | 130, 35% (average win $149, average loss -$100, median hold 23 days) |
+| Net of closed trades by year | 2019 -530, 2020 +335, 2021 +1,196, 2022 -348, 2023 -1,360, 2024 -148, 2025 -480, 2026 -174 |
+| Commission | $263 |
+| Verdict | **FAIL** |
+
+Context only: at $0 commission, stage 2 ends at $3,414 (-31.7%) and stage 1 at $17,066
+(+241.3%). The $0 run takes the same trades until the 79th (WST, August 2023), then
+cash timing sends it down a slightly different path.
+
+Healthcare's strong stage 1 did not hold up from 2019: since then, breakouts in stocks
+already up 25% mostly reversed (win rate 35%), and the bot lost money while XLV almost
+doubled. With survivorship bias favouring stage 1, the honest reading is that this
+strategy has not shown an edge in either sector.

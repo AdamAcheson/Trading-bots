@@ -19,6 +19,7 @@ import math
 import os
 import sys
 from collections import defaultdict
+from datetime import date
 from statistics import mean
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,7 +37,9 @@ def load(symbol: str):
     path = os.path.join(ROOT, "data_cache", "daily", f"{symbol}.json")
     if not os.path.exists(path):
         return None
-    rows = json.load(open(path))
+    # Drop weekend rows: Twelve Data has two stray ones (CVS 2009-07-26, a zero-volume
+    # bar at 2.5x the price; one in PAAS). No other cleaning.
+    rows = [r for r in json.load(open(path)) if date.fromisoformat(r[0]).weekday() < 5]
     return swing.Daily(*[list(col) for col in zip(*rows)])
 
 
