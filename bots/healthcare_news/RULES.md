@@ -112,3 +112,27 @@ A pass allows paper trading first; it does not justify real money by itself.
 - **Earnings misses are not traded.** The bot is long only and buys only up-moves.
 - **Concentration:** three positions in one sector; news days cluster in earnings season,
   so slots can fill at once and later news days are skipped.
+
+## Result, stage 1 (2026-10-02): FAIL -- testing stopped; stage 2 not run
+
+`python3 scripts/backtest_healthcare_news.py --start 2006-01-01 --end 2018-12-31`
+(calendar from 2007-08-31, XLV's 200th day):
+
+| | |
+|---|---|
+| $5,000 became | **$3,516 (-29.7%, -3.1% a year)** |
+| Largest drawdown | -56.3% |
+| XLV buy and hold | +151.5% (largest drawdown -40.6%) |
+| News days found | 272 (83 skipped: no free slot) |
+| Closed trades | 178; win rate 38%; average win $105, average loss -$79; average net -$8.34 |
+| Average holding | 25.7 trading days |
+| Exits | 92 news failed (close below the news day's low), 86 after 40 days |
+| Commission | $357 |
+| Net by year | 2007 +428, 2008 -1,701, 2009 -39, 2010 -431, 2011 -684, 2012 +656, 2013 +395, 2014 +304, 2015 -493, 2016 -305, 2017 +37, 2018 +348 |
+
+Context, not part of the decision: at $0 commission, $4,077 (-18.5%).
+
+Half the positions (92 of 178) fell back below the news day's low before 40 days were
+up. After a big up day on heavy volume, these stocks gave back the jump about as often
+as they extended it. In this universe and period, the drift was not there. Trades were
+checked by hand against the raw daily bars: news days, next-open buys and exits match.
