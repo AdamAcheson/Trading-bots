@@ -1,9 +1,8 @@
-# Swing bot ("hold the leaders"): rules and test plan
+# Swing bot ("hold the leaders"): rules and test plan (pre-registered)
 
-Draft of 2026-10-02 for the account holder's review. **Not yet locked:** section 9 has
-one decision for the account holder. Once it is made, this file is committed as the
-pre-registration and nothing in it changes after results are seen; a change means a new,
-dated version.
+Locked 2026-10-02, before any swing backtest was run, after the account holder chose
+position-size option A (section 9). Nothing below changes after results are seen; a
+change means a new, dated version.
 
 ## 0. Why this design
 
@@ -30,12 +29,13 @@ trades **a few times a month**.
 - **Healthcare:** the 60 stocks of `bots/healthcare/config/tickers.yaml`. Sector ETF:
   **XLV**.
 
-Each runs as its own $5,000 account.
+Each runs as its own $5,000 account, and each stage starts again from $5,000 in cash.
 
 ## 2. Data and timing
 
-- **Daily bars** (open, high, low, close, volume), split-adjusted, from Twelve Data: up
-  to 20 years per symbol, about one credit each (about 95 credits in all).
+- **Daily bars** (open, high, low, close, volume), split-adjusted (not dividend-adjusted,
+  for the bot and the ETF comparison alike), from Twelve Data: up to 20 years per symbol,
+  about one credit each (about 95 credits in all).
 - Signals are computed **after the close**. Orders go in at the **next day's open**, so a
   15-minute data delay does not matter, and the orders can be placed by hand.
 
@@ -87,8 +87,8 @@ When more stocks qualify than there are free slots, the highest 126-day returns 
 
 Nothing is tuned: the rules above are fixed, so each period is a test.
 
-- **Stage 1:** from the first date with enough history (200 days for SMA200) to
-  **2018-12-31**. It must be profitable after costs, or testing stops there.
+- **Stage 1:** from the first date the sector ETF has 200 days of history (SMA200) to
+  **2018-12-31**; each stock joins once it has 200 days of its own. It must be profitable after costs, or testing stops there.
 - **Stage 2 (deciding):** **2019-01-01 to 2026-09-30**.
 
 Stage 2 **passes** for a universe if, after all costs, it is profitable **and** either:
@@ -108,20 +108,14 @@ Reported for context:
 A pass allows paper trading on IBKR (or signals placed by hand) first. It does not
 justify real money by itself.
 
-## 9. DECISION FOR THE ACCOUNT HOLDER: position size
+## 9. Position size: option A, chosen by the account holder 2026-10-02
 
-The intraday specification capped risk at $25 a trade (0.5% of $5,000) and positions at
-$1,250. A swing stop of 3 x the daily ATR is wide: typically 8-15% of the price for a
-miner and 5-8% for a large healthcare stock. The two cannot both hold with useful
-position sizes:
-
-- **Option A (recommended): 3 equal positions,** each one-third of current equity
-  (about $1,650). The risk per trade is then about $80-250 (roughly 1.5-5% of the
-  account), depending on the stock's volatility. The account is fully invested when
-  three leaders exist, and commission is about 0.1% of each position each way.
-- **Option B: keep $25 risk per trade,** shares = $25 / (3 x ATR20), up to 3 positions.
-  Positions would be roughly $170-500, most of the account would sit in cash, and the
-  $1.00 minimum commission would cost about 0.2-0.6% each way.
+- **3 equal positions,** each targeting one-third of the account's equity at the
+  previous close (about $1,650 at the start). Shares = floor(target / fill price).
+- If settled cash covers less than half of the target, the buy is skipped; otherwise
+  the bot buys what settled cash allows.
+- The risk per trade follows from the stop: 3 x ATR20 x shares, typically $80-250.
+- Option B ($25 risk per trade, positions of about $170-500) was not chosen.
 
 ## 10. Known limits, stated before any run
 
