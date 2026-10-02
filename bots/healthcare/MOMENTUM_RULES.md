@@ -113,3 +113,34 @@ With $1,250 positions, the position cap usually binds before the $25 risk cap: a
 ATR on a large healthcare stock is roughly 0.2-0.4% of its price, so 1.25 x ATR risks only
 about $3-6 on $1,250. A Fixed-commission round trip costs at least $2.00. Commission may
 therefore be a large share of each trade's risk; the report will show how large.
+
+## Result: stage 1, 2026-10-02 -- FAIL; the holdout was not run
+
+`python3 scripts/backtest_healthcare_momentum.py --start 2025-04-29 --end 2026-03-31 --tag hcm_s1`
+(232 sessions):
+
+| | |
+|---|---|
+| Trades | 808 (win rate 30.8%) |
+| Average R before commission | +0.035 |
+| Gross P&L, spread included | +$21.27 |
+| IBKR Fixed commission | $1,617.76 ($2.00 a trade) |
+| **Net P&L** | **-$1,596.48** (-$6.88 a session; 90% bootstrap lower bound -$8.35) |
+| Largest drawdown | -$1,612.19; ending equity $3,403.52 |
+| Exits | 412 stopped, 392 trailing stop, 4 at 15:50 |
+| Average position / risk | $1,134 / $4.49 |
+| XLV buy and hold, same months | +5.9% (+$295 on $5,000) |
+
+Not taken (signal-bar counts): score below 75 418,464; price or 20-day volume gate
+241,923; settled cash 127,137; three positions open 4,376; gap day 7,308.
+
+Section 9's concern held: the $1,250 position cap set the size, so the average trade
+risked $4.49 and paid $2.00 in commission, 0.45R. But commission is not the whole
+story: before commission the 808 trades made $21.27, an average of +0.035R, which is
+no edge at all. Stage 1 fails, so per section 8 the holdout (2026-04-01 to 2026-09-29)
+stays unseen.
+
+A bug found while checking the first run, fixed before this result: when several
+stocks qualified on the same bar, the settled-cash check ignored the orders already
+queued on that bar, so some days bought more than $5,000. The first run's figures
+(832 trades, -$1,617.39) are superseded.
