@@ -144,3 +144,24 @@ A bug found while checking the first run, fixed before this result: when several
 stocks qualified on the same bar, the settled-cash check ignored the orders already
 queued on that bar, so some days bought more than $5,000. The first run's figures
 (832 trades, -$1,617.39) are superseded.
+
+## Variant B (pre-registered 2026-10-02, after the stage-1 result above)
+
+Requested by the account holder after seeing stage 1. Two changes, nothing else:
+
+1. **No XLV.** The "XLV bullish" condition is removed from the score. Its 12.5 points
+   are simply gone: the maximum is 87.5 and the bar stays at **75**, as written in the
+   specification. A trade may therefore fail at most one 10-point item, or the volume
+   test, and nothing more.
+2. **Only on days the Dow opens at least 50 points higher than its prior close.**
+   Historical pre-market Dow futures are not available on the free data plan, so the
+   stand-in is DIA, the ETF that tracks the Dow at 1/100 of its value: trade only on
+   days when DIA's opening price is at least **$0.50** above the prior day's close
+   (daily bars, `data_cache/reference/DIA_daily.json`). This is known at 09:30, before
+   the first possible signal at 09:45, so it uses no information from later in the day.
+   94 of the 232 stage-1 sessions qualify (counted before any trade was simulated).
+
+Same periods and the same pass rule as section 8. Variant B was chosen after stage 1's
+result was seen, so stage 1 is no longer an untouched test for it: **the holdout
+(2026-04-01 to 2026-09-29) decides**, and is run only if variant B is profitable after
+all costs in stage 1.
