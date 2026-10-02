@@ -44,3 +44,21 @@ In mining, the whole rise in both periods came while the market was closed; duri
 trading hours the stocks lost ground on average. A bot that is flat every night can only
 fish in the part of the day that lost money. Healthcare is the reverse, but its moves sit
 in a few news days that the healthcare bot avoided.
+
+## Is the overnight pattern stable? 20 years of daily bars (2026-10-02)
+
+Average stock in each universe, per year, before costs (daily bars from
+`data_cache/daily`, split-adjusted, weekend rows dropped):
+
+| Period | Mining: overnight only | Mining: day only | Healthcare: overnight only | Healthcare: day only |
+|---|---|---|---|---|
+| 2007-2012 | +43.8% | -29.2% | -3.7% | +10.6% |
+| 2013-2018 | +19.8% | -27.0% | +7.9% | +8.6% |
+| 2019-2022 | +43.1% | -22.8% | +9.1% | +4.5% |
+| 2023-2026 | +51.9% | -15.1% | +0.0% | +3.0% |
+
+Mining's split holds in every period: up overnight, down during the day. Healthcare has
+no consistent pattern. Caveats: daily opening prices are single prints that can sit away
+from the tradeable quote, so part of this may not be capturable; and holding only
+overnight means two orders every day, whose costs (spread plus commission) are about the
+same size as the average overnight gain.
