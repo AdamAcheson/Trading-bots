@@ -1,8 +1,8 @@
-# Mining "buy the close, sell the open" bot: rules and test plan
+# Mining "buy the close, sell the open" bot: rules and test plan (pre-registered)
 
-Draft of 2026-10-02 for the account holder's review. Once approved it is committed as the
-pre-registration; nothing in it changes after results are seen, and a change means a new,
-dated version.
+Locked 2026-10-02 at the account holder's approval, before any backtest of these rules
+was run. Nothing below changes after results are seen; a change means a new, dated
+version.
 
 ## 0. Why this design
 
