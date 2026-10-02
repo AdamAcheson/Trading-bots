@@ -2,7 +2,7 @@
 
 ## The answer in one paragraph
 
-Over about a month, eight trading strategies were built and tested on two sectors,
+Over about a month, nine trading strategies were built and tested on two sectors,
 silver and gold mining and large-cap healthcare, for a $5,000 cash account at Interactive
 Brokers. Each was tested fairly: the rules were written down and locked before any
 result was seen, costs were included, and the decision was made on data the rules had
@@ -23,14 +23,16 @@ to pause strategy building and not trade real money with any of these bots.
 | | | Healthcare | 2019-2026 (passed 2007-2018 at +230%) | **-28.7%** | XLV +97.7% |
 | 7 | Mining: buy dips at the close, sell at the open | Mining | 2007-2018 | **-33.0%** | GDX -44.0% |
 | 8 | Healthcare: buy the day after a news jump, hold ~2 months | Healthcare | 2007-2018 | **-29.7%** | XLV +151.5% |
+| 9 | GDX overnight only: buy at the close, sell at the open, every day | Mining | 2007-2018 | **-44.7%** (+45.6% at $0 commission) | GDX -44.0% |
 
-Strategies 1-5 trade within the day and use 5-minute bars. Strategies 6-8 hold for days
+Strategies 1-5 trade within the day and use 5-minute bars. Strategies 6-9 hold overnight or for days
 to months and use 20 years of daily bars. Where a strategy failed its first stage, the
 second was not run, as its rules required.
 
 Details: `docs/BACKTEST_RESULTS.md` (1-2), `bots/healthcare/RULES.md` (3),
 `bots/healthcare/MOMENTUM_RULES.md` (4-5), `bots/swing/RULES.md` (6),
-`bots/mining_overnight/RULES.md` (7), `bots/healthcare_news/RULES.md` (8).
+`bots/mining_overnight/RULES.md` (7), `bots/healthcare_news/RULES.md` (8),
+`bots/gdx_overnight/RULES.md` (9).
 
 ## What was learned
 
@@ -51,7 +53,9 @@ Details: `docs/BACKTEST_RESULTS.md` (1-2), `bots/healthcare/RULES.md` (3),
 4. **Mining stocks rise overnight and fall during the day, and have for 20 years:**
    +20% to +52% a year overnight against -15% to -29% during trading hours, in every
    period since 2007. A bot that is flat every night trades only the half of the day
-   that loses. Healthcare has no such pattern.
+   that loses. Healthcare has no such pattern. GDX itself gained about 0.115% a night
+   before costs; on a $5,000 account, Fixed commission and slippage cost more than that.
+   At $0 commission it made money in 2007-2018 (+45.6%), but by a thin margin.
 5. **Knowing what happened is not the same as predicting it.** Buying after the signs
    of a winner (a 25% run, a breakout, a news jump) did not reliably catch the next one.
    The healthcare swing bot worked well from 2007 to 2018 and then lost money from 2019
@@ -68,7 +72,7 @@ Details: `docs/BACKTEST_RESULTS.md` (1-2), `bots/healthcare/RULES.md` (3),
   data, reconnects automatically if Trader Workstation drops, and does not trade symbols
   still on delayed data.
 - **Backtesters** for 5-minute and daily data with realistic fills, settled-cash rules
-  and IBKR Fixed commission; 535 automated tests.
+  and IBKR Fixed commission; 543 automated tests.
 - **Data:** 5-minute bars for the mining and healthcare stocks, and 20 years of daily
   bars for all 91 symbols (`data_cache/`).
 - **Daily replay** of each session (`scripts/daily_replay.py`, `docs/DAILY_REPLAY_LOG.md`).

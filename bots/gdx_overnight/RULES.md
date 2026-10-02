@@ -116,3 +116,40 @@ A pass allows paper trading first; it does not justify real money by itself.
   wash sales in a taxable account. Not modelled; a matter for a tax professional.
 - **Bank holidays** on which markets are open (settlement is delayed a day) are not
   modelled.
+
+## Result, stage 1 (2026-10-02): FAIL -- testing stopped; stage 2 not run
+
+`python3 scripts/backtest_gdx_overnight.py --start 2007-08-31 --end 2018-12-31`
+(2,852 nights):
+
+| Run | $5,000 became | Largest drawdown | Commission |
+|---|---|---|---|
+| **C, cash account (two halves), Fixed commission: DECIDES** | **$2,763 (-44.7%, -5.1% a year)** | -71.2% | $5,109 |
+| C, $0 commission (context) | $7,281 (+45.6%, +3.4% a year) | -41.5% | $0 |
+| M, margin account, Fixed commission (context) | $2,475 (-50.5%) | -83.8% | $6,669 |
+| M, $0 commission (context) | $7,657 (+53.1%, +3.8% a year) | -63.2% | $0 |
+| GDX buy and hold | -44.0% | -81.3% | |
+
+GDX itself, before costs: overnight only **+2,557%**, day only **-97.9%**. The average
+night gained **+0.115%** (geometric), with 53% of nights up (best +11.3%, worst -9.0%).
+24 days in the period have an open exactly equal to the close; they were used as they
+are.
+
+What happened:
+- **The pattern is real in GDX, but small per night.** +0.115% a night is the
+  round-trip cost that would leave the strategy flat. The 0.05% slippage on each side
+  takes 0.10% of it before any commission.
+- **Commission sinks it on a $5,000 account.** Two $1.00-minimum orders a night on a
+  $2,500 half cost 0.08% a night, so the total cost is above the gain. The commission
+  ($5,109) is more than the starting account.
+- **The two halves diverged by luck.** Half A's nights compounded to +186% before costs,
+  half B's to +829%. Costs then shrank half A until the fixed $1 minimums were a large
+  share of each trade, and from mid-2016 it could buy only one share a night.
+- **At $0 commission both versions made money and beat GDX** (context only, not part of
+  the decision). Even there the margin left after slippage is about 0.015% a night, so
+  slightly worse real fills than assumed would erase it.
+
+Under the rules, stage 2 is not run. Changing the deciding cost to $0 commission after
+seeing these results would be a new, dated version of the rules, and would need the
+account holder to confirm with IBKR that their account charges no commission on
+market-on-close and market-on-open orders sent through the API.
