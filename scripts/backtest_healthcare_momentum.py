@@ -94,7 +94,8 @@ def bootstrap_lower(daily, block=5, n=5000, seed=7, q=0.05):
     return means[int(q * n)]
 
 
-def run(start: str, end: str, tag: str, p: hm.Params = hm.Params()) -> dict:
+def run(start: str, end: str, tag: str, p: hm.Params = hm.Params(), trace=None) -> dict:
+    """trace: optional dict; filled with (ticker, day) -> reasons a qualifying signal was not taken."""
     config = load_config(HC_CONFIG)
     costs = TransactionCostModel.from_config(load_config().risk)     # IBKR Pro Fixed
     universe = sorted(config.auto_tradeable_universe())
@@ -203,21 +204,29 @@ def run(start: str, end: str, tag: str, p: hm.Params = hm.Params()) -> dict:
                 shares = hm.position_size(r.price, r.atr14, p)
                 if shares < 1:
                     skips["under_one_share"] += 1
+                    if trace is not None:
+                        trace.setdefault((ticker, day), []).append((t, "under_one_share"))
                     continue
                 risk = shares * p.stop_atr * r.atr14
                 open_risk = sum(x.open_risk for x in open_pos.values()) + sum(
                     sh * p.stop_atr * a for _, sh, a, _ in pending)
                 if len(open_pos) + len(pending) >= p.max_open_positions:
                     skips["cap_3_positions"] += 1
+                    if trace is not None:
+                        trace.setdefault((ticker, day), []).append((t, "cap_3_positions"))
                     continue
                 if open_risk + risk > p.max_total_open_risk:
                     skips["cap_75_risk"] += 1
+                    if trace is not None:
+                        trace.setdefault((ticker, day), []).append((t, "cap_75_risk"))
                     continue
                 cost = shares * r.price
                 queued = sum(sh * data[tk].bars[data[tk].index[(day, t)]].close for tk, sh, _, _ in pending)
                 held = sum(x.entry * x.shares for x in open_pos.values()) + queued
                 if purchases + queued + cost > day_start_equity or held + cost > equity:
                     skips["settled_cash"] += 1
+                    if trace is not None:
+                        trace.setdefault((ticker, day), []).append((t, "settled_cash"))
                     continue
                 pending.append((ticker, shares, r.atr14, sc))
         # A stock with no 15:45 bar (no trades in that interval) is sold at its last bar.
