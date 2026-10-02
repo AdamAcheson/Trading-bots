@@ -120,3 +120,29 @@ A pass allows paper trading first; it does not justify real money by itself.
   here without testing variants.
 - **Three positions in one sector move together.** A sector-wide gap down hits all of
   them at once.
+
+## Result, stage 1 (2026-10-02): FAIL -- testing stopped; stage 2 not run
+
+`python3 scripts/backtest_mining_overnight.py --start 2006-01-01 --end 2018-12-31`
+(calendar from 2007-08-31, GDX's 200th day):
+
+| | |
+|---|---|
+| $5,000 became | **$3,351 (-33.0%, -3.5% a year)** |
+| Largest drawdown | -44.7% |
+| GDX buy and hold | -44.0% (largest drawdown -81.3%) |
+| Closed trades | 281; win rate 52%; average win $52.75, average loss -$69.26; average net -$5.87 |
+| Average holding | 4.1 trading days |
+| Exits | 264 back above SMA5, 12 disaster stops, 5 time limits |
+| Commission | $620 |
+| Net by year | 2007 -395, 2008 +223, 2009 +733, 2010 -415, 2011 +197, 2012 -24, 2014 -877, 2016 -1,123, 2017 -34, 2018 +65 |
+
+Context, not part of the decision:
+- $0 commission: $3,836 (-23.3%).
+- Buying at the same close the signal was read on (not exactly tradeable): $4,586
+  (-8.3%; win rate 60%). Waiting a day misses part of the bounce, but even without the
+  delay the rules lose money.
+
+The bot lost less than GDX in a mining bear market, with about half GDX's drawdown, but
+the pass rule requires a profit in stage 1. Trades were checked by hand against the raw
+daily bars: signals, closing buys and opening sells match.
