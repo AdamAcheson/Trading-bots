@@ -41,6 +41,26 @@ def ema(values: Sequence[float], period: int) -> Optional[float]:
     return ema_series(values, period)[-1]
 
 
+def rsi(values: Sequence[float], period: int = 14) -> Optional[float]:
+    """Wilder's RSI of the last value: simple averages of the first `period` changes,
+    then Wilder smoothing. None until there are period + 1 values."""
+    if len(values) <= period:
+        return None
+    gains = losses = 0.0
+    for i in range(1, period + 1):
+        d = values[i] - values[i - 1]
+        gains += max(d, 0.0)
+        losses += max(-d, 0.0)
+    avg_g, avg_l = gains / period, losses / period
+    for i in range(period + 1, len(values)):
+        d = values[i] - values[i - 1]
+        avg_g = (avg_g * (period - 1) + max(d, 0.0)) / period
+        avg_l = (avg_l * (period - 1) + max(-d, 0.0)) / period
+    if avg_l == 0:
+        return 100.0 if avg_g > 0 else 50.0
+    return 100.0 - 100.0 / (1.0 + avg_g / avg_l)
+
+
 def ema_update(previous_ema: float, new_value: float, period: int) -> float:
     """Incremental EMA update for streaming use (spec section 6: continuously update)."""
     k = 2.0 / (period + 1)
@@ -175,6 +195,9 @@ class IndicatorSnapshot:
     # eligibility.require_ema_trend is on (docs/PREREG_EMA_TREND.md).
     trend_ema_fast: Optional[float] = None
     trend_ema_slow: Optional[float] = None
+    # RSI(14) of the same carried-over closes, filled in only when eligibility.rsi_band
+    # is set (docs/PREREG_RSI_BAND.md).
+    trend_rsi: Optional[float] = None
 
     @property
     def spread(self) -> float:

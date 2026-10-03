@@ -48,6 +48,9 @@ eligibility:
   # docs/PREREG_EMA_TREND.md: take a signal only when price > 9 EMA > 20 EMA, on
   # 5-minute EMAs carried over from previous sessions as a chart shows them.
   require_ema_trend: false
+  # docs/PREREG_RSI_BAND.md: take a signal only when RSI(14) of 5-minute closes, carried
+  # over from previous sessions, is within [low, high], e.g. [52, 70] (null = off).
+  rsi_band: null
   # Skip a stock for the whole day when it opens at least this % away from the prior
   # close, up or down (null = off). The healthcare bot's stand-in for an earnings
   # calendar, which Twelve Data's free plan does not provide (bots/healthcare/RULES.md).

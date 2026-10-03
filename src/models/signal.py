@@ -39,6 +39,7 @@ class RejectionReason(str, Enum):
     # (a stand-in for an earnings or other big-news day; see bots/healthcare/RULES.md).
     REJECTED_GAP_DAY = "REJECTED_GAP_DAY"
     REJECTED_EMA_TREND = "REJECTED_EMA_TREND"
+    REJECTED_RSI_BAND = "REJECTED_RSI_BAND"
     REJECTED_DATA_QUALITY = "REJECTED_DATA_QUALITY"
     REJECTED_NO_SETUP = "REJECTED_NO_SETUP"
     REJECTED_LOW_SCORE = "REJECTED_LOW_SCORE"

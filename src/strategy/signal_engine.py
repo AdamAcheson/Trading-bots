@@ -121,6 +121,15 @@ def evaluate_ticker(ctx: EvaluationContext, strategy_config: dict, risk_config: 
         if not (ctx.snapshot.last_price > fast and fast > slow):
             return reject(RejectionReason.REJECTED_EMA_TREND)
 
+    # docs/PREREG_RSI_BAND.md: skip weak (low RSI) and overextended (high RSI) signals.
+    rsi_band = strategy_config["eligibility"].get("rsi_band")
+    if rsi_band:
+        value = ctx.snapshot.trend_rsi
+        if value is None:
+            return reject(RejectionReason.REJECTED_DATA_QUALITY)
+        if not (rsi_band[0] <= value <= rsi_band[1]):
+            return reject(RejectionReason.REJECTED_RSI_BAND)
+
     # ATR must be available before the chase rule (which silently no-ops on None,
     # rather than rejecting) and the stop-price calculation (which crashes on None)
     # both run. Previously masked by benchmark confirmation's EMA-20 gate requiring

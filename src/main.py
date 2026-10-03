@@ -33,7 +33,7 @@ from broker.etrade import ETradeBrokerAdapter
 from broker.paper import PaperBrokerAdapter
 from config_loader import AppConfig, load_config
 from data.etrade_market_data import ETradeMarketDataProvider
-from data.indicators import IndicatorSnapshot, compute_snapshot, ema
+from data.indicators import IndicatorSnapshot, compute_snapshot, ema, rsi
 from data.market_data import InMemoryMarketDataProvider, MarketDataProvider
 from execution.costs import TransactionCostModel
 from execution.order_manager import OrderManager
@@ -55,6 +55,7 @@ from strategy.signal_engine import EvaluationContext, evaluate_ticker
 # (docs/PREREG_EMA_TREND.md). 200 bars is about five sessions: the seed's weight in a
 # 20-period EMA is under 1e-8 by then.
 TREND_EMA_BARS = 200
+RSI_PERIOD = 14         # docs/PREREG_RSI_BAND.md, on the same carried-over closes
 
 @dataclass
 class ScheduleWindow:
@@ -225,11 +226,16 @@ class TradingBot:
         prior_close = _prior_session_close(state.bars, now)
         if prior_close:
             snapshot.overnight_gap_pct = (today_bars[0].open - prior_close) / prior_close * 100.0
-        if strat["eligibility"].get("require_ema_trend"):
+        want_ema = strat["eligibility"].get("require_ema_trend")
+        want_rsi = strat["eligibility"].get("rsi_band")
+        if want_ema or want_rsi:
             end = _session_start_index(state.bars, _session_start(now) + timedelta(days=1))
             closes = [b.close for b in state.bars[max(0, end - TREND_EMA_BARS):end]]
-            snapshot.trend_ema_fast = ema(closes, strat["indicators"]["ema_fast"])
-            snapshot.trend_ema_slow = ema(closes, strat["indicators"]["ema_slow"])
+            if want_ema:
+                snapshot.trend_ema_fast = ema(closes, strat["indicators"]["ema_fast"])
+                snapshot.trend_ema_slow = ema(closes, strat["indicators"]["ema_slow"])
+            if want_rsi:
+                snapshot.trend_rsi = rsi(closes, RSI_PERIOD)
         return snapshot
 
     def evaluate_and_maybe_enter(self, ticker: str, now: datetime) -> None:
