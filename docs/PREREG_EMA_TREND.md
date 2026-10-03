@@ -62,3 +62,32 @@ loss after costs, commission, exits by reason, largest drawdown.
 - Both periods have been used for 32 earlier rule tests.
 - Removing trades also removes commission. The pass rule requires a profit after
   commission, not just a smaller loss.
+
+## Result (2026-10-03): REJECTED -- shipped configuration unchanged
+
+`python3 scripts/compare_runs.py --first 2023-09-05 --last 2025-12-08 pf_base_h ema_h` and
+`--first 2025-12-15 --last 2026-09-22 pf_base_t ema_t`.
+
+| Period | Run | Trades | Win rate | Avg win / avg loss (net) | After Fixed commission | Commission | Paired difference per session, 95% interval |
+|---|---|---|---|---|---|---|---|
+| Holdout | today's rules | 672 | 44% | +$18.02 / -$17.59 | -$1,172.30 | $1,520 | |
+| | **9/20 EMA filter** | 586 | 42% | +$17.75 / -$17.47 | **-$1,572.63** | $1,312 | **-$0.71 [-$1.80, +$0.29]** |
+| Tuning | today's rules | 285 | 44% | +$23.84 / -$19.47 | -$135.92 | $658 | |
+| | **9/20 EMA filter** | 266 | 42% | +$23.85 / -$19.72 | **-$366.02** | $608 | -$1.19 [-$4.04, +$1.41] |
+
+Pass rule: (1) profitable after commission in both periods: **no**; (2) holdout interval
+above zero: **no** (it is centred below zero); (3) tuning mean difference positive: **no**.
+Worse in both periods, even before commission (holdout -$260.66, tuning +$242.25, against
++$347.96 and +$521.89).
+
+Why: the filter removed the better trades. Baseline trades it blocked:
+
+| Period | Blocked | Their net | Avg per trade | Baseline trades kept, avg per trade |
+|---|---|---|---|---|
+| Holdout | 184 | +$234 | **+$1.27** (51% won) | -$2.88 |
+| Tuning | 73 | +$190 | **+$2.60** (45% won) | -$1.54 |
+
+Freed slots went to 98 and 54 other trades, which lost $157 and $31. A VWAP reclaim is a
+bounce after a dip, and the reclaims that came while the short-term trend still pointed
+down did slightly better than those in an uptrend, in both periods. The differences are
+small and could be noise; the filter's verdict does not depend on them.

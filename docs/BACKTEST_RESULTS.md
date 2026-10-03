@@ -2557,3 +2557,21 @@ without the third order, but trades the breakeven stop used to scratch now rode 
 full stop. Loss-making in both periods, no measurable difference: rejected.
 
 **Running tally: 32 tested, 2 adopted, 1 bug fixed.**
+
+## 9/20 EMA trend filter on the VWAP reclaim: REJECTED (2026-10-03)
+
+Asked by the account holder, pre-registered in `docs/PREREG_EMA_TREND.md`: take a signal
+only when price > 9 EMA > 20 EMA, on 5-minute EMAs carried over from previous sessions
+(`--ema-trend-filter`; config `eligibility.require_ema_trend`, default false).
+
+| Period | Today's rules, after Fixed commission | With the filter | Paired difference per session, 95% interval |
+|---|---|---|---|
+| Holdout 2023-09-05..2025-12-08 | -$1,172.30 (672 trades) | **-$1,572.63** (586) | -$0.71 [-$1.80, +$0.29] |
+| Tuning 2025-12-15..2026-09-22 | -$135.92 (285) | **-$366.02** (266) | -$1.19 [-$4.04, +$1.41] |
+
+Worse in both periods, before and after commission. The trades it blocked had been the
+better ones (+$1.27 and +$2.60 average net, against -$2.88 and -$1.54 for those kept):
+reclaims made while the short-term trend still pointed down did slightly better.
+Rejected.
+
+**Running tally: 33 tested, 2 adopted, 1 bug fixed.**
