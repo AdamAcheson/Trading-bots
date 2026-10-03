@@ -2593,3 +2593,22 @@ that lost $579 on the holdout. RSI at entry carries no information here, as meas
 2026-09-22. Rejected.
 
 **Running tally: 34 tested, 2 adopted, 1 bug fixed.**
+
+## Stricter VWAP reclaim: REJECTED (2026-10-03)
+
+Asked by the account holder, pre-registered in `docs/PREREG_STRICT_RECLAIM.md`: on top of the
+shipped reclaim, a 1-4 bar dip from above VWAP, a reclaim bar above its clock time's normal
+volume (previous 20 sessions), and entry within 0.5 x ATR of VWAP (`--strict-reclaim`;
+config `setups.strict_vwap_reclaim.enabled`, default false).
+
+| Period | Today's rules, after Fixed commission | Stricter reclaim | Paired difference per session, 95% interval |
+|---|---|---|---|
+| Holdout 2023-09-05..2025-12-08 | -$1,172.30 (672 trades) | **-$323.81** (42) | +$1.50 [-$0.66, +$3.67] |
+| Tuning 2025-12-15..2026-09-22 | -$135.92 (285) | **+$37.97** (26) | +$0.90 [-$4.48, +$6.07] |
+
+It cut trading by 94-91%. The holdout loss shrank only because it traded less: per trade
+the strict reclaims did worse (-$7.71 against -$1.74) and lost money before commission.
+Tuning's small profit rests on 26 trades. Not profitable in both periods, holdout interval
+includes zero: rejected.
+
+**Running tally: 35 tested, 2 adopted, 1 bug fixed.**

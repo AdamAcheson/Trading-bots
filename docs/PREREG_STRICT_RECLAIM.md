@@ -75,3 +75,31 @@ slots did.
 - Both periods have been used for 34 earlier rule tests.
 - Removing trades also removes commission; the pass rule requires a profit after
   commission, not just a smaller loss.
+
+## Result (2026-10-03): REJECTED -- shipped configuration unchanged
+
+`python3 scripts/compare_runs.py --first 2023-09-05 --last 2025-12-08 pf_base_h sr_h` and
+`--first 2025-12-15 --last 2026-09-22 pf_base_t sr_t`.
+
+| Period | Run | Trades | Win rate | Avg win / avg loss (net) | Before commission | After Fixed commission | Paired difference per session, 95% interval |
+|---|---|---|---|---|---|---|---|
+| Holdout | today's rules | 672 | 44% | +$18.02 / -$17.59 | +$347.96 | -$1,172.30 | |
+| | **stricter reclaim** | **42** | 38% | +$13.81 / -$20.95 | **-$229.07** | **-$323.81** | +$1.50 [-$0.66, +$3.67] |
+| Tuning | today's rules | 285 | 44% | +$23.84 / -$19.47 | +$521.89 | -$135.92 | |
+| | **stricter reclaim** | **26** | 42% | +$29.46 / -$19.07 | +$95.41 | **+$37.97** | +$0.90 [-$4.48, +$6.07] |
+
+Pass rule: (1) profitable after commission in both periods: **no** (holdout -$323.81);
+(2) holdout interval above zero: **no** (it includes zero); (3) tuning mean difference
+positive: yes. Two of three fail.
+
+What it did:
+- It removed almost every trade: 42 instead of 672 on the holdout (about one every three
+  weeks) and 26 instead of 285 on tuning. Of the three conditions, the 1-4 bar dip rejected
+  the most signals, then above-normal volume, then distance from VWAP.
+- The smaller holdout loss comes from trading less, not from better trades. Per trade the
+  strict reclaims were worse: -$7.71 average net against -$1.74, and they lost money even
+  before commission. The 24 holdout trades it took that today's rules did not (freed
+  slots) lost $289.
+- Tuning made +$37.97 on 26 trades, the first after-commission profit for an intraday
+  variant in that period apart from the one-trade-a-day test. With 26 trades the interval
+  is very wide, and the holdout, with more trades, points the other way.
