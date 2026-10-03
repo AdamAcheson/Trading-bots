@@ -1,0 +1,304 @@
+# Energy (oil & gas) bot universe: 27 large, liquid U.S. oil & gas stocks, chosen
+# 2026-10-03 for the stricter-reclaim test (bots/energy/RULES.md, pre-registered).
+#
+# Every stock has the healthcare bot's settings, with XLE as the benchmark:
+#   max_spread_pct 0.15; overnight_category manual_only (never held overnight);
+#   profit_target_pct [1.5, 3.0] (fixed 2.25% target); volatility normal.
+
+tickers:
+  APA:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  AR:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  BKR:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  COP:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CTRA:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  CVX:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  DVN:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  EOG:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  EQT:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  FANG:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  FTI:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  HAL:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  KMI:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MPC:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  MTDR:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  NOV:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  OKE:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  OVV:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  OXY:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  PR:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  PSX:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  RRC:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  SLB:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  SM:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  VLO:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  WMB:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal
+
+  XOM:
+    benchmark: XLE
+    sector: energy
+    strategy: energy
+    max_spread_pct: 0.15
+    overnight_category: manual_only
+    overnight_position_multiplier: 0.0
+    manual_only: false
+    profit_target_pct: [1.5, 3.0]
+    volatility_category: normal

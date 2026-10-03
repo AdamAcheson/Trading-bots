@@ -1,0 +1,191 @@
+# ENERGY BOT copy of bots/healthcare/config/strategy.yaml, identical apart from this header
+# (bots/energy/RULES.md). tests/test_energy_config.py fails if it drifts.
+
+# Strategy parameters. See docs/ARCHITECTURE.md section 5 for schema notes.
+
+candle_timeframe: 5m   # architecture supports adding 1m later without changing the schema
+
+indicators:
+  ema_fast: 9
+  ema_slow: 20
+  atr_period: 14
+
+eligibility:
+  # RVOL threshold: today's cumulative volume-so-far must be at least this many
+  # times the same point-in-time historical average. Lowered from 1.20 (20% above
+  # average) to admit more candidates, per user decision after reviewing the 60-day
+  # backtest's rejection-reason breakdown (REJECTED_LOW_VOLUME was a meaningful
+  # contributor).
+  min_relative_volume: 1.10
+  # Minimum share price to enter. This is a TRANSACTION COST screen, not a quality
+  # judgement: the one-cent minimum tick is a fixed cost per share, so crossing a
+  # penny-wide market costs 12 bps on a $4 stock and 0.5 bps on a $95 one. The
+  # threshold maps directly to a cost ceiling -- 10 caps the tick at 5 bps per
+  # side, 20 at 2.5 bps. 0 disables the screen.
+  # See docs/BACKTEST_RESULTS.md for the sweep behind this value. 10 caps tick cost
+  # at 5 bps per side -- half the strategy's ~10 bps breakeven budget. $5 posted a
+  # marginally higher net in both periods but is statistically indistinguishable
+  # from $10 (t=-0.14), while $10 halves holdout drawdown (4.92% -> 3.23%) and
+  # leaves more headroom if real spreads exceed the one-cent floor the cost model
+  # assumes -- which they do on the cheaper names.
+  min_price: 10.0
+  # Gap-conditioned volume threshold. relative_volume compares today's cumulative
+  # volume to the same clock time on an AVERAGE day, which is unfair in one
+  # specific direction: after a large overnight gap the repricing already happened
+  # while the market was shut, so the session opens with the work done and trades
+  # quietly. On 2026-09-17 SVM gapped +5.19% and drifted +3.53% intraday on RVOL
+  # that decayed 0.77 -> 0.36, never near the 1.10 gate, while closing +8.91%.
+  # When |open vs prior close| >= min_gap_pct, min_relative_volume below is used in
+  # place of the standard one. min_gap_pct 0 disables the whole mechanism.
+  gap_day:
+    min_gap_pct: 0.0
+    min_relative_volume: 0.70
+  # Stock's own price must be above its 9EMA to enter. Separate from
+  # benchmark_confirmation.require_ema_alignment below (that one gates the
+  # benchmark, this one gates the stock) -- previously this side had no config
+  # toggle at all and was rejecting almost as often as REJECTED_DATA_QUALITY in the
+  # 60-day backtest. Disabled here for the same reason the benchmark-side check
+  # was already dropped: it isn't the bottleneck we want (see min_trend_pct below
+  # for the actual "too few trades in a trending sector" fix).
+  require_ema_alignment: false
+  # docs/PREREG_EMA_TREND.md: take a signal only when price > 9 EMA > 20 EMA, on
+  # 5-minute EMAs carried over from previous sessions as a chart shows them.
+  require_ema_trend: false
+  # docs/PREREG_RSI_BAND.md: take a signal only when RSI(14) of 5-minute closes, carried
+  # over from previous sessions, is within [low, high], e.g. [52, 70] (null = off).
+  rsi_band: null
+  # Skip a stock for the whole day when it opens at least this % away from the prior
+  # close, up or down (null = off). The healthcare bot's stand-in for an earnings
+  # calendar, which Twelve Data's free plan does not provide (bots/healthcare/RULES.md).
+  skip_gap_day_pct: 4.0
+
+chase_rule:
+  max_consecutive_large_green_candles: 3
+  large_candle_body_atr_multiple: 1.0
+  # 3.0, not the original 1.0. This one threshold WAS the chase rule in practice:
+  # of 85,309 rejections across 797,956 signals, 85,284 (100.0%) were this check,
+  # while the two below fired 25 times between them. At 1.0 ATR it rejected
+  # strength rather than over-extension -- 1 ATR above VWAP is close to the
+  # definition of a strong intraday mover, and 97% of profit comes from the 6.7%
+  # of trades exceeding +3R.
+  #
+  # Measured over 642 trading days across both periods, relaxing it is worth
+  # +$37,445 (95% CI [+$14,555, +$60,846]) and roughly doubles the number of >3R
+  # trades (73 -> 127 holdout, 24 -> 45 tuning). 3.0 rather than removing the
+  # check keeps a ceiling and captures ~80% of the gain ($66,434 of $72,101 on
+  # the holdout).
+  #
+  # Know what this buys: the gain is ENTIRELY in the tail. Pooled sign test is
+  # better on 314 days and worse on 322 (p = 0.78), the median day is -$0.10, and
+  # drawdown rises (3.9% -> 5.1% holdout, 3.2% -> 4.5% tuning). Unlike the
+  # trailing stop, this does not improve the typical day -- it trades drawdown for
+  # about twice as many large winners.
+  max_atr_above_vwap: 3.0
+  max_pct_above_open_without_consolidation: 5.0
+
+benchmark_confirmation:
+  require_price_above_vwap: true
+  # Benchmark may trade up to this % below its own VWAP and still confirm, instead
+  # of requiring strictly above -- softens noise right around the line without
+  # dropping the VWAP check entirely. 0.0 = original strict behavior.
+  vwap_tolerance_pct: 0.15
+  require_ema_alignment: false
+  require_no_fresh_intraday_low: true
+  # Second, independent way to satisfy require_price_above_vwap: even when the
+  # benchmark is below TODAY's VWAP, it still confirms if it's at least this % above
+  # the PRIOR session's close. VWAP resets every morning, so a sector genuinely
+  # trending up over days/weeks (mining, per the user's read of the tape) can still
+  # read "below VWAP" for large stretches of any single day -- this catches that
+  # multi-day trend instead of only same-day price action. 0.0 disables this path
+  # (original VWAP-only behavior). 0.3 is a starting point, not a backtested
+  # optimum -- re-tune after seeing its effect on trade count and win rate.
+  min_trend_pct: 0.3
+
+setups:
+  # ORB_PULLBACK_CONTINUATION is the setup this strategy was originally designed
+  # around; VWAP_RECLAIM is the fallback tried only when it doesn't match. DISABLED
+  # since 2026-09-09, but NOT for the reason first recorded here.
+  #
+  # The original finding (ORB 47 trades, 12.8% win rate, -$2,092.83 over 183 days)
+  # was measured at max_concurrent_positions=1, with no cost model, no stop floor
+  # and no $10 price screen. Re-tested 2026-09-23 under the current config, ORB is
+  # no longer a money-loser: 521 holdout trades at a 46.1% win rate and +$1,075.96,
+  # 318 tuning trades at 50.6% and +$1,045.00. That verdict is refuted; do not cite
+  # it.
+  #
+  # It stays off because re-enabling it is a WASH -- holdout -$15.41 (p=0.950),
+  # tuning +$417.77 (p=0.505) -- while adding ~32% more trades on both periods. ORB
+  # displaces 158 holdout / 140 tuning VWAP_RECLAIM trades worth $554 and $777, which
+  # roughly cancels what it contributes. Free in a backtest; live, each extra fill is
+  # slippage the cost model only floors and a day-trade against the PDT count.
+  # Set true to re-enable; scripts/backtest.py --enable-orb / --disable-orb override.
+  enable_orb_pullback: false
+  opening_range_minutes: 10
+  pullback_max_atr_from_breakout: 1.0
+  vwap_reclaim_lookback_bars: 6
+  # docs/PREREG_STRICT_RECLAIM.md: on top of the reclaim above, require a 1..max_dip_bars
+  # dip from above VWAP, a reclaim bar trading above its clock time's normal volume
+  # (previous volume_sessions sessions, at least min_sessions), and entry no more than
+  # max_atr_above_vwap x ATR above VWAP.
+  strict_vwap_reclaim:
+    enabled: false
+    max_dip_bars: 4
+    min_volume_ratio: 1.0
+    max_atr_above_vwap: 0.5
+    volume_sessions: 20
+    min_sessions: 5
+
+reward_risk:
+  minimum_r: 1.5
+  preferred_r_min: 1.75
+  # When true, ignores each ticker's fixed profit_target_pct and always targets
+  # preferred_r_min x the ACTUAL stop distance instead -- so widening the stop
+  # (e.g. via risk.yaml's stops.atr_multiplier) doesn't silently shrink the
+  # R-ratio by leaving the target fixed while risk grows. false preserves the
+  # original fixed-%-target behavior.
+  scale_target_with_stop: false
+
+scoring:
+  weights:
+    benchmark_strength: 20
+    relative_volume: 15
+    price_vs_vwap: 10
+    ema_alignment: 10
+    opening_range_structure: 15
+    pullback_quality: 10
+    risk_reward: 10
+    spread_liquidity: 5
+    sector_strength: 5
+  minimum_entry_score:
+    primary_window: 70
+    midday_window: 80
+
+trade_management:
+  # How the SIMULATED broker (backtests, daily replay) fills stops and targets:
+  #   resting_orders -- as orders resting at a broker: filled when a bar's low/high
+  #                     reaches the level (at the level, or the open if it gapped
+  #                     through). Achievable. The shipped default since 2026-09-29.
+  #   close_at_level -- the original model: triggered only when a bar CLOSES beyond
+  #                     the level, yet booked AT the level. No real order does both;
+  #                     against 1-minute data it overstated gross P&L by 60-92%
+  #                     (docs/BACKTEST_RESULTS.md, 1-minute study). Kept only to
+  #                     reproduce results recorded before 2026-09-29.
+  exit_model: resting_orders
+  breakeven_trigger_r: 1.0
+  # A real ratcheting stop, trailed atr_multiplier x ATR under the trade's
+  # high-water mark once it reaches activate_at_r. breakeven_trigger_r above only
+  # ever moves the stop to the entry price, once -- so a trade that runs up and
+  # retraces exits at exactly $0.00. Default off: enabling it changes exit
+  # behavior on every trade, so it has to be justified by a backtest, not assumed.
+  trailing_stop:
+    enabled: true
+    atr_multiplier: 1.0
+    activate_at_r: 1.0
+  partial_exit:
+    enabled: true
+    trigger_r: 1.5
+    sell_fraction: 0.35
+  # docs/PREREG_PROFIT_FLOOR.md: when set (dollars), no partial sale, no breakeven and no
+  # trailing until a close reaches the price that books this much net profit after
+  # commission and spread; then the stop locks there and the trailing stop runs above it.
+  profit_floor_net_dollars: null
