@@ -165,3 +165,7 @@ trade_management:
     enabled: true
     trigger_r: 1.5
     sell_fraction: 0.35
+  # docs/PREREG_PROFIT_FLOOR.md: when set (dollars), no partial sale, no breakeven and no
+  # trailing until a close reaches the price that books this much net profit after
+  # commission and spread; then the stop locks there and the trailing stop runs above it.
+  profit_floor_net_dollars: null

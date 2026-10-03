@@ -443,6 +443,7 @@ class TradingBot:
                 trailing_atr_multiplier=strat.get("trailing_stop", {}).get("atr_multiplier", 1.0),
                 trailing_activate_r=strat.get("trailing_stop", {}).get("activate_at_r", 1.0),
                 atr=snapshot.atr,
+                profit_floor_net=strat.get("profit_floor_net_dollars"),
             )
             # Send the 1.5R partial to the broker. PositionManager.manage() decrements
             # the position and books the partial in the trade record, but nothing here

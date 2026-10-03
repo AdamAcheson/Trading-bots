@@ -45,6 +45,7 @@ class Position:
 
     breakeven_moved: bool = False
     partial_exit_taken: bool = False
+    profit_floor_locked: bool = False
     overnight: bool = False
     overnight_multiplier_applied: Optional[float] = None
 

@@ -133,6 +133,7 @@ class PositionManager:
         trailing_atr_multiplier: float = 1.0,
         trailing_activate_r: float = 1.0,
         atr: Optional[float] = None,
+        profit_floor_net: Optional[float] = None,
     ) -> ManagementAction:
         position = self._positions.get(ticker)
         if position is None or not position.is_open():
@@ -141,6 +142,10 @@ class PositionManager:
         position.update_excursion(current_price)
         r = position.r_multiple(current_price)
         action = ManagementAction()
+
+        if profit_floor_net is not None:
+            return self._manage_profit_floor(position, current_price, profit_floor_net,
+                                             trailing_enabled, trailing_atr_multiplier, atr, action)
 
         if not position.breakeven_moved and r >= breakeven_trigger_r:
             position.current_stop = max(position.current_stop, position.entry_price)
@@ -182,6 +187,43 @@ class PositionManager:
             action.exit_reason = ExitReason.TARGET_HIT
             action.exit_price = position.current_target
 
+        return action
+
+    def profit_floor_price(self, position: Position, floor_net: float) -> float:
+        """The price at which selling every share books `floor_net` net profit, after
+        commission and the modelled spread on both orders (Trade.net_profit)."""
+        cm, shares, entry = self.cost_model, position.shares, position.entry_price
+        buy = cm.per_side(entry, shares)
+        price = entry + (floor_net + buy + cm.per_side(entry, shares, sell=True)) / shares
+        for _ in range(3):      # the sell cost depends weakly on price (1% cap)
+            price = entry + (floor_net + buy + cm.per_side(price, shares, sell=True)) / shares
+        return price
+
+    def _manage_profit_floor(self, position: Position, current_price: float, floor_net: float,
+                             trailing_enabled: bool, trailing_atr_multiplier: float,
+                             atr: Optional[float], action: ManagementAction) -> ManagementAction:
+        """docs/PREREG_PROFIT_FLOOR.md: no partial sale, no breakeven and no trailing until a
+        close reaches the price that nets `floor_net`; then the stop locks there and the
+        trailing stop runs above it."""
+        lock = self.profit_floor_price(position, floor_net)
+        if not position.profit_floor_locked and current_price >= lock:
+            position.profit_floor_locked = True
+            position.breakeven_moved = True             # exits from here on are TRAILING_STOP
+            position.current_stop = max(position.current_stop, lock)
+            action.breakeven_moved = True
+        if position.profit_floor_locked and trailing_enabled and atr and atr > 0:
+            high_water = position.entry_price + position.maximum_favorable_excursion
+            position.current_stop = max(position.current_stop, lock,
+                                        high_water - atr * trailing_atr_multiplier)
+
+        if current_price <= position.current_stop:
+            action.should_exit = True
+            action.exit_reason = ExitReason.TRAILING_STOP if position.breakeven_moved else ExitReason.STOP_HIT
+            action.exit_price = position.current_stop
+        elif current_price >= position.current_target:
+            action.should_exit = True
+            action.exit_reason = ExitReason.TARGET_HIT
+            action.exit_price = position.current_target
         return action
 
     def close_position(
