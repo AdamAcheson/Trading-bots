@@ -64,3 +64,35 @@ those trades had done.
 - Both periods have been used for 33 earlier rule tests.
 - Removing trades also removes commission; the pass rule requires a profit after
   commission, not just a smaller loss.
+
+## Result (2026-10-03): REJECTED -- shipped configuration unchanged
+
+`python3 scripts/compare_runs.py --first 2023-09-05 --last 2025-12-08 pf_base_h rsi_h` and
+`--first 2025-12-15 --last 2026-09-22 pf_base_t rsi_t`.
+
+| Period | Run | Trades | Win rate | Avg win / avg loss (net) | After Fixed commission | Commission | Paired difference per session, 95% interval |
+|---|---|---|---|---|---|---|---|
+| Holdout | today's rules | 672 | 44% | +$18.02 / -$17.59 | -$1,172.30 | $1,520 | |
+| | **RSI 52-70** | 608 | 42% | +$16.98 / -$17.29 | **-$1,808.29** | $1,368 | **-$1.12 [-$2.36, -$0.01]** |
+| Tuning | today's rules | 285 | 44% | +$23.84 / -$19.47 | -$135.92 | $658 | |
+| | **RSI 52-70** | 271 | 43% | +$23.15 / -$18.97 | **-$211.98** | $618 | -$0.39 [-$3.36, +$2.32] |
+
+Pass rule: (1) profitable after commission in both periods: **no**; (2) holdout interval
+above zero: **no** -- it lies entirely **below** zero, so on the holdout the filter is
+measurably worse; (3) tuning mean difference positive: **no**.
+
+Baseline trades the band blocked (RSI recomputed at each entry from the cached bars; all
+kept trades check out inside the band):
+
+| Period | RSI below 52 | RSI above 70 | Trades kept | New trades in the freed slots |
+|---|---|---|---|---|
+| Holdout | 117, avg **-$0.38** | 38, avg **+$1.92** | 512, avg -$2.40 | 96, avg **-$6.04** (-$579) |
+| Tuning | 55, avg **+$1.41** | 17, avg **-$2.32** | 213, avg -$0.82 | 58, avg -$0.61 (-$35) |
+
+(5 more holdout trades dropped out because earlier changes shifted cash and slots.)
+
+RSI did not separate good trades from bad: the blocked "weak" and "overextended" trades did
+no worse than the ones kept, and the two groups swap places between periods. The filter
+then spent the freed slots and cash on other signals, which on the holdout lost $579. This
+matches the 2026-09-22 finding that 5-minute RSI at entry carries no information about the
+outcome.

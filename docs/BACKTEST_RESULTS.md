@@ -2575,3 +2575,21 @@ reclaims made while the short-term trend still pointed down did slightly better.
 Rejected.
 
 **Running tally: 33 tested, 2 adopted, 1 bug fixed.**
+
+## RSI 52-70 band on the VWAP reclaim: REJECTED (2026-10-03)
+
+Asked by the account holder, pre-registered in `docs/PREREG_RSI_BAND.md`: take a signal only
+when 5-minute RSI(14), carried over from previous sessions, is between 52 and 70
+(`--rsi-band 52 70`; config `eligibility.rsi_band`, default null).
+
+| Period | Today's rules, after Fixed commission | With the band | Paired difference per session, 95% interval |
+|---|---|---|---|
+| Holdout 2023-09-05..2025-12-08 | -$1,172.30 (672 trades) | **-$1,808.29** (608) | **-$1.12 [-$2.36, -$0.01]** |
+| Tuning 2025-12-15..2026-09-22 | -$135.92 (285) | **-$211.98** (271) | -$0.39 [-$3.36, +$2.32] |
+
+Worse in both periods; on the holdout the whole interval is below zero. The blocked trades
+(RSI under 52 or over 70) did no worse than those kept, and the freed slots went to signals
+that lost $579 on the holdout. RSI at entry carries no information here, as measured on
+2026-09-22. Rejected.
+
+**Running tally: 34 tested, 2 adopted, 1 bug fixed.**

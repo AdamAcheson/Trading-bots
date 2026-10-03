@@ -41,7 +41,8 @@ Details: `docs/BACKTEST_RESULTS.md` (1-2), `bots/healthcare/RULES.md` (3),
    to a few dollars each before costs. Commission turned every intraday strategy from
    roughly flat to clearly negative. A rule never to take a profit under $15 net (2026-10-03,
    `docs/PREREG_PROFIT_FLOOR.md`) did not help: losses grew as much as wins. A 9/20 EMA
-   trend filter (`docs/PREREG_EMA_TREND.md`) made it worse in both periods.
+   trend filter (`docs/PREREG_EMA_TREND.md`) and an RSI 52-70 band
+   (`docs/PREREG_RSI_BAND.md`) made it worse in both periods.
 2. **Early backtests were too optimistic, and fixing them mattered.** Two problems
    inflated the original bot's results: stops and targets were assumed filled at exact
    levels that 1-minute data showed were not achievable (gross overstated by 60-92%),
