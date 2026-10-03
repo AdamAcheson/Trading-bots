@@ -347,6 +347,11 @@ def main() -> int:
         help="EXPERIMENT override: R-multiple at which the partial exit fires (in-memory only).",
     )
     parser.add_argument(
+        "--strict-reclaim", action="store_true",
+        help="docs/PREREG_STRICT_RECLAIM.md: 1-4 bar dip, reclaim on above-normal volume, "
+             "entry within 0.5 ATR of VWAP",
+    )
+    parser.add_argument(
         "--rsi-band", type=float, nargs=2, default=None, metavar=("LOW", "HIGH"),
         help="docs/PREREG_RSI_BAND.md: take a signal only when 5-minute RSI(14), carried "
              "over from previous sessions, is within [LOW, HIGH]",
@@ -419,6 +424,7 @@ def main() -> int:
         args.no_trailing, args.only_tickers is not None,
         args.no_partial_exit, args.partial_exit_trigger_r is not None, args.exit_model is not None,
         args.profit_floor_net is not None, args.ema_trend_filter, args.rsi_band is not None,
+        args.strict_reclaim,
         args.no_chase_rule, args.chase_max_atr_above_vwap is not None,
         args.starting_equity is not None, args.min_relative_volume is not None,
         args.min_stop_pct is not None,
@@ -478,6 +484,9 @@ def main() -> int:
         if args.exit_model is not None:
             config.strategy["trade_management"]["exit_model"] = args.exit_model
             print(f"  trade_management.exit_model = {args.exit_model}")
+        if args.strict_reclaim:
+            config.strategy["setups"]["strict_vwap_reclaim"]["enabled"] = True
+            print("  setups.strict_vwap_reclaim.enabled = True")
         if args.rsi_band is not None:
             config.strategy["eligibility"]["rsi_band"] = list(args.rsi_band)
             print(f"  eligibility.rsi_band = {list(args.rsi_band)}")

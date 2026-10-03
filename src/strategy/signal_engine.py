@@ -20,7 +20,8 @@ from risk.position_sizing import (
 )
 from strategy.benchmark import benchmark_confirmation
 from strategy.scoring import score_setup
-from strategy.setups import SetupResult, basic_eligibility, detect_opening_range_breakout_pullback, detect_vwap_reclaim, is_overextended
+from strategy.setups import (SetupResult, basic_eligibility, detect_opening_range_breakout_pullback,
+                             detect_vwap_reclaim, is_overextended, strict_reclaim_rejection)
 
 
 @dataclass
@@ -39,6 +40,9 @@ class EvaluationContext:
     now: datetime
     profit_target_pct: Optional[Sequence[float]] = None
     benchmark_prior_close: Optional[float] = None
+    # Normal volume of each of today's bars for its clock time (previous sessions'
+    # average), aligned with bars; only filled in for setups.strict_vwap_reclaim.
+    bar_volume_norms: Optional[Sequence[Optional[float]]] = None
 
 
 def evaluate_ticker(ctx: EvaluationContext, strategy_config: dict, risk_config: dict) -> Signal:
@@ -172,6 +176,18 @@ def evaluate_ticker(ctx: EvaluationContext, strategy_config: dict, risk_config: 
             signal.extra["orb_rejection_detail"] = setup.reason
     if not setup.matched:
         setup = detect_vwap_reclaim(ctx.bars, lookback_bars=setup_cfg["vwap_reclaim_lookback_bars"])
+        strict = setup_cfg.get("strict_vwap_reclaim") or {}
+        if setup.matched and strict.get("enabled"):
+            why = strict_reclaim_rejection(
+                ctx.bars, ctx.bar_volume_norms, ctx.snapshot.atr,
+                lookback_bars=setup_cfg["vwap_reclaim_lookback_bars"],
+                max_dip_bars=strict["max_dip_bars"],
+                min_volume_ratio=strict["min_volume_ratio"],
+                max_atr_above_vwap=strict["max_atr_above_vwap"],
+            )
+            if why:
+                signal.extra["strict_reclaim_detail"] = why
+                return reject(RejectionReason.REJECTED_NO_SETUP)
 
     if not setup.matched:
         return reject(RejectionReason.REJECTED_NO_SETUP)

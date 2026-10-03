@@ -192,7 +192,34 @@ class TradingBot:
         self._reported_discrepancies: set = set()
         self._last_exit_fill_price: Optional[float] = None
         self._resting_checked: Dict[str, datetime] = {}
+        self._volume_norm_cache: Dict[tuple, Dict[tuple, Optional[float]]] = {}
         self.min_shares_skips = 0
+
+    def _bar_volume_norms(self, ticker: str, today_bars: List[Bar], now: datetime):
+        """docs/PREREG_STRICT_RECLAIM.md: each of today's bars' normal volume, the average
+        volume of the bar at the same clock time over the previous `volume_sessions`
+        sessions (None with fewer than `min_sessions`). Computed once per ticker per day.
+        None when the strict reclaim is off."""
+        strict = self.config.strategy["setups"].get("strict_vwap_reclaim") or {}
+        if not strict.get("enabled") or not today_bars:
+            return None
+        key = (ticker, today_bars[0].timestamp.date())
+        norms = self._volume_norm_cache.get(key)
+        if norms is None:
+            sessions, min_sessions = strict["volume_sessions"], strict["min_sessions"]
+            bars = self.data_provider.get_state(ticker).bars
+            start = _session_start_index(bars, now)
+            by_day: Dict = {}
+            for b in bars[max(0, start - (sessions + 2) * 100):start]:
+                by_day.setdefault(b.timestamp.date(), []).append(b)
+            by_time: Dict[tuple, List[float]] = {}
+            for day in sorted(by_day)[-sessions:]:
+                for b in by_day[day]:
+                    by_time.setdefault((b.timestamp.hour, b.timestamp.minute), []).append(b.volume)
+            norms = {t: (sum(v) / len(v) if len(v) >= min_sessions else None) for t, v in by_time.items()}
+            self._volume_norm_cache = {k: v for k, v in self._volume_norm_cache.items() if k[1] == key[1]}
+            self._volume_norm_cache[key] = norms
+        return [norms.get((b.timestamp.hour, b.timestamp.minute)) for b in today_bars]
 
     def _snapshot_for(self, ticker: str, now: datetime) -> Optional[IndicatorSnapshot]:
         state = self.data_provider.get_state(ticker)
@@ -284,6 +311,7 @@ class TradingBot:
             minimum_entry_score=min_score,
             now=now,
             profit_target_pct=ticker_cfg.profit_target_pct,
+            bar_volume_norms=self._bar_volume_norms(ticker, today_stock_bars, now),
         )
         signal = evaluate_ticker(ctx, self.config.strategy, self.config.risk)
         self.signal_journal.log(signal)

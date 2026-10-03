@@ -256,3 +256,56 @@ def detect_vwap_reclaim(
         entry_price=confirmation_bar.close,
         structure_stop_reference=retest_bar.low,
     )
+
+
+def strict_reclaim_rejection(
+    bars: Sequence[Bar],
+    volume_norms: Optional[Sequence[Optional[float]]],
+    atr_value: Optional[float],
+    lookback_bars: int,
+    max_dip_bars: int = 4,
+    min_volume_ratio: float = 1.0,
+    max_atr_above_vwap: float = 0.5,
+) -> Optional[str]:
+    """docs/PREREG_STRICT_RECLAIM.md, applied on top of a matched detect_vwap_reclaim.
+    Returns why the reclaim is not strict enough, or None if it qualifies.
+
+    1. The dip: consecutive closes at or below VWAP ending at the last such close before
+       the reclaim (the one detect_vwap_reclaim found) number 1..max_dip_bars, and the
+       close before the dip was above VWAP.
+    2. The reclaim bar (the first close back above VWAP) trades more than
+       min_volume_ratio x the normal volume for that clock time (volume_norms, aligned
+       with bars; None where there is too little history).
+    3. The latest close is at most max_atr_above_vwap x ATR above VWAP."""
+    vwaps = vwap_series(bars)
+    n = len(bars)
+
+    def below(i):
+        return vwaps[i] is not None and bars[i].close <= vwaps[i]
+
+    last_below = None
+    for i in range(max(n - lookback_bars, 0), n - 2):
+        if below(i):
+            last_below = i
+    if last_below is None:
+        return "strict_no_dip"
+    start = last_below
+    while start - 1 >= 0 and below(start - 1):
+        start -= 1
+    if last_below - start + 1 > max_dip_bars:
+        return "strict_dip_too_long"
+    if start == 0 or vwaps[start - 1] is None:
+        return "strict_not_above_before_dip"
+
+    reclaim = last_below + 1
+    norm = volume_norms[reclaim] if volume_norms is not None and reclaim < len(volume_norms) else None
+    if norm is None:
+        return "strict_no_volume_history"
+    if not bars[reclaim].volume > min_volume_ratio * norm:
+        return "strict_reclaim_volume_not_above_normal"
+
+    if atr_value is None or vwaps[-1] is None:
+        return "strict_no_atr"
+    if bars[-1].close - vwaps[-1] > max_atr_above_vwap * atr_value:
+        return "strict_too_far_above_vwap"
+    return None

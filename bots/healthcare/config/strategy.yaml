@@ -124,6 +124,17 @@ setups:
   opening_range_minutes: 10
   pullback_max_atr_from_breakout: 1.0
   vwap_reclaim_lookback_bars: 6
+  # docs/PREREG_STRICT_RECLAIM.md: on top of the reclaim above, require a 1..max_dip_bars
+  # dip from above VWAP, a reclaim bar trading above its clock time's normal volume
+  # (previous volume_sessions sessions, at least min_sessions), and entry no more than
+  # max_atr_above_vwap x ATR above VWAP.
+  strict_vwap_reclaim:
+    enabled: false
+    max_dip_bars: 4
+    min_volume_ratio: 1.0
+    max_atr_above_vwap: 0.5
+    volume_sessions: 20
+    min_sessions: 5
 
 reward_risk:
   minimum_r: 1.5
