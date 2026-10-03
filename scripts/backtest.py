@@ -347,6 +347,11 @@ def main() -> int:
         help="EXPERIMENT override: R-multiple at which the partial exit fires (in-memory only).",
     )
     parser.add_argument(
+        "--ema-trend-filter", action="store_true",
+        help="docs/PREREG_EMA_TREND.md: take a signal only when price > 9 EMA > 20 EMA "
+             "(chart-style EMAs carried over from previous sessions)",
+    )
+    parser.add_argument(
         "--profit-floor-net", type=float, default=None,
         help="docs/PREREG_PROFIT_FLOOR.md: never take a profit under this many dollars net "
              "(no partial, no breakeven/trailing until the lock price, then lock and trail)",
@@ -408,7 +413,7 @@ def main() -> int:
         args.trailing_atr is not None, args.max_position_pct_equity is not None,
         args.no_trailing, args.only_tickers is not None,
         args.no_partial_exit, args.partial_exit_trigger_r is not None, args.exit_model is not None,
-        args.profit_floor_net is not None,
+        args.profit_floor_net is not None, args.ema_trend_filter,
         args.no_chase_rule, args.chase_max_atr_above_vwap is not None,
         args.starting_equity is not None, args.min_relative_volume is not None,
         args.min_stop_pct is not None,
@@ -468,6 +473,9 @@ def main() -> int:
         if args.exit_model is not None:
             config.strategy["trade_management"]["exit_model"] = args.exit_model
             print(f"  trade_management.exit_model = {args.exit_model}")
+        if args.ema_trend_filter:
+            config.strategy["eligibility"]["require_ema_trend"] = True
+            print("  eligibility.require_ema_trend = True")
         if args.profit_floor_net is not None:
             config.strategy["trade_management"]["profit_floor_net_dollars"] = args.profit_floor_net
             print(f"  trade_management.profit_floor_net_dollars = {args.profit_floor_net}")

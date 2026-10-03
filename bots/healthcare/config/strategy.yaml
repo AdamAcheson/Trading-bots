@@ -49,6 +49,9 @@ eligibility:
   # was already dropped: it isn't the bottleneck we want (see min_trend_pct below
   # for the actual "too few trades in a trending sector" fix).
   require_ema_alignment: false
+  # docs/PREREG_EMA_TREND.md: take a signal only when price > 9 EMA > 20 EMA, on
+  # 5-minute EMAs carried over from previous sessions as a chart shows them.
+  require_ema_trend: false
   # Skip a stock for the whole day when it opens at least this % away from the prior
   # close, up or down (null = off). The healthcare bot's stand-in for an earnings
   # calendar, which Twelve Data's free plan does not provide (bots/healthcare/RULES.md).

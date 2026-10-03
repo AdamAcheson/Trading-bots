@@ -111,6 +111,16 @@ def evaluate_ticker(ctx: EvaluationContext, strategy_config: dict, risk_config: 
     if not elig.eligible:
         return reject(RejectionReason(elig.reason))
 
+    # docs/PREREG_EMA_TREND.md: only buy when the short-term trend already points up --
+    # price above the 9 EMA and the 9 EMA above the 20 EMA, on chart-style EMAs carried
+    # over from previous sessions.
+    if strategy_config["eligibility"].get("require_ema_trend"):
+        fast, slow = ctx.snapshot.trend_ema_fast, ctx.snapshot.trend_ema_slow
+        if fast is None or slow is None:
+            return reject(RejectionReason.REJECTED_DATA_QUALITY)
+        if not (ctx.snapshot.last_price > fast and fast > slow):
+            return reject(RejectionReason.REJECTED_EMA_TREND)
+
     # ATR must be available before the chase rule (which silently no-ops on None,
     # rather than rejecting) and the stop-price calculation (which crashes on None)
     # both run. Previously masked by benchmark confirmation's EMA-20 gate requiring

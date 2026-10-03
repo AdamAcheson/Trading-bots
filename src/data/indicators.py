@@ -170,6 +170,11 @@ class IndicatorSnapshot:
     # against that normal day, so on a gap day it reads low for a structural reason
     # rather than a lack of interest. None before a prior session exists.
     overnight_gap_pct: Optional[float] = None
+    # 9 and 20 EMAs of 5-minute closes carried over from previous sessions, as a chart
+    # shows them (ema_9/ema_20 above restart every morning). Only filled in when
+    # eligibility.require_ema_trend is on (docs/PREREG_EMA_TREND.md).
+    trend_ema_fast: Optional[float] = None
+    trend_ema_slow: Optional[float] = None
 
     @property
     def spread(self) -> float:

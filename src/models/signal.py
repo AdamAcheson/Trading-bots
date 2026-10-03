@@ -38,6 +38,7 @@ class RejectionReason(str, Enum):
     # The stock opened at least eligibility.skip_gap_day_pct away from the prior close
     # (a stand-in for an earnings or other big-news day; see bots/healthcare/RULES.md).
     REJECTED_GAP_DAY = "REJECTED_GAP_DAY"
+    REJECTED_EMA_TREND = "REJECTED_EMA_TREND"
     REJECTED_DATA_QUALITY = "REJECTED_DATA_QUALITY"
     REJECTED_NO_SETUP = "REJECTED_NO_SETUP"
     REJECTED_LOW_SCORE = "REJECTED_LOW_SCORE"
