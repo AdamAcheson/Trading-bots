@@ -2539,3 +2539,21 @@ Fewer orders cut commission, and in the 2026 silver rally that was enough to tur
 profit. Over 2023-2025 the day's first signal lost money even before commission. The
 after-commission loss there has a 95% interval entirely below zero: a real loss, not
 noise. Rejected.
+
+## Never take a profit under $15 net: REJECTED (2026-10-03)
+
+Asked by the account holder, pre-registered in `docs/PREREG_PROFIT_FLOOR.md`: no partial
+sale, no breakeven or trailing until a close reaches the price that books $15 net after
+commission and spread, then lock the stop there and trail above it
+(`--profit-floor-net 15`; config `trade_management.profit_floor_net_dollars`, default null).
+
+| Period | Today's rules, after Fixed commission | $15 floor | Paired difference per session, 95% interval |
+|---|---|---|---|
+| Holdout 2023-09-05..2025-12-08 | -$1,172.30 (672 trades) | **-$1,265.55** (668) | -$0.16 [-$1.29, +$0.93] |
+| Tuning 2025-12-15..2026-09-22 | -$135.92 (285) | **-$139.04** (286) | -$0.02 [-$3.29, +$3.71] |
+
+More winners closed at $15 net or better (118 to 151 on the holdout) and commission fell
+without the third order, but trades the breakeven stop used to scratch now rode back to the
+full stop. Loss-making in both periods, no measurable difference: rejected.
+
+**Running tally: 32 tested, 2 adopted, 1 bug fixed.**

@@ -39,7 +39,8 @@ Details: `docs/BACKTEST_RESULTS.md` (1-2), `bots/healthcare/RULES.md` (3),
 1. **Costs decide intraday trading on a small account.** IBKR Pro Fixed commission
    costs about $2 per round trip. Intraday trades on $1,250-2,500 positions made cents
    to a few dollars each before costs. Commission turned every intraday strategy from
-   roughly flat to clearly negative.
+   roughly flat to clearly negative. A rule never to take a profit under $15 net (2026-10-03,
+   `docs/PREREG_PROFIT_FLOOR.md`) did not help: losses grew as much as wins.
 2. **Early backtests were too optimistic, and fixing them mattered.** Two problems
    inflated the original bot's results: stops and targets were assumed filled at exact
    levels that 1-minute data showed were not achievable (gross overstated by 60-92%),

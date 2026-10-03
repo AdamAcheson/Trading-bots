@@ -65,3 +65,30 @@ how many trades closed with a gain under $15 net and why, and largest drawdown.
   trailing). None was confirmed on the holdout.
 - The lock is checked on 5-minute closes, as the shipped breakeven and trailing are; the
   live bot checks about every 30 seconds.
+
+## Result (2026-10-03): REJECTED -- shipped configuration unchanged
+
+`python3 scripts/compare_runs.py --first 2023-09-05 --last 2025-12-08 pf_base_h pf15_h` and
+`--first 2025-12-15 --last 2026-09-22 pf_base_t pf15_t`. The re-run baseline reproduces the
+holdout figure exactly (-$1,172.30); the tuning baseline is -$135.92 on the same dates.
+
+| Period | Run | Trades | Win rate | Avg win / avg loss (net) | After Fixed commission | Commission | Paired difference per session, 95% interval |
+|---|---|---|---|---|---|---|---|
+| Holdout | today's rules | 672 | 44% | +$18.02 / -$17.59 | **-$1,172.30** | $1,520 | |
+| | **$15 floor** | 668 | 43% | +$19.90 / -$18.01 | **-$1,265.55** | $1,367 | **-$0.16 [-$1.29, +$0.93]** |
+| Tuning | today's rules | 285 | 44% | +$23.84 / -$19.47 | -$135.92 | $658 | |
+| | **$15 floor** | 286 | 45% | +$22.47 / -$19.35 | **-$139.04** | $580 | -$0.02 [-$3.29, +$3.71] |
+
+Pass rule: (1) profitable after commission in both periods: **no** (both negative);
+(2) holdout interval above zero: **no**; (3) tuning mean difference positive: **no**.
+
+What it did:
+- It worked as designed. Winners closed for $15 net or more rose from 118 to 151
+  (holdout); commission fell $153 (holdout) and $78 (tuning) without the partial sale.
+  Of the 98 holdout trailing exits booked under $15, 68 sit at the lock itself (within a
+  cent of $15); 30 were filled lower when a bar opened below the stop (lowest +$3.07).
+- It cost about as much as it saved. Without the breakeven stop, trades that used to be
+  scratched for about $0 rode back to the full stop: stop-outs rose from 312 to 326 and
+  3:50 PM exits from 75 to 95, and the win rate fell from 44% to 43%.
+- Net, it changed nothing measurable. The core problem stands: losses (-$18) are as large
+  as wins (+$20), at a win rate under 50%, and the costs come on top.
