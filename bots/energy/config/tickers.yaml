@@ -1,4 +1,4 @@
-# Energy (oil & gas) bot universe: 27 large, liquid U.S. oil & gas stocks, chosen
+# Energy (oil & gas) bot universe: 26 large, liquid U.S. oil & gas stocks, chosen
 # 2026-10-03 for the stricter-reclaim test (bots/energy/RULES.md, pre-registered).
 #
 # Every stock has the healthcare bot's settings, with XLE as the benchmark:
@@ -40,17 +40,6 @@ tickers:
     volatility_category: normal
 
   COP:
-    benchmark: XLE
-    sector: energy
-    strategy: energy
-    max_spread_pct: 0.15
-    overnight_category: manual_only
-    overnight_position_multiplier: 0.0
-    manual_only: false
-    profit_target_pct: [1.5, 3.0]
-    volatility_category: normal
-
-  CTRA:
     benchmark: XLE
     sector: energy
     strategy: energy

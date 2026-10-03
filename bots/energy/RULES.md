@@ -13,6 +13,11 @@ MTDR, PR, SM (producers), SLB, HAL, BKR, NOV, FTI (services), MPC, VLO, PSX (ref
 KMI, WMB, OKE (pipelines). Benchmark: **XLE**. Data: 5-minute bars from Twelve Data,
 2025-03-31 to 2026-10-02.
 
+**Note added 2026-10-03, before any energy backtest (data, not a rule change):** CTRA
+(Coterra) is not available on the free Twelve Data plan ("available starting with the Pro
+or Venture plan"), so it is removed. The test uses the other **26 stocks**. All 26 and XLE
+have 5-minute bars from 2025-03-31 to 2026-10-02.
+
 ## 2. What is tested
 
 The healthcare bot's settings unchanged (`bots/energy/config` is a copy of

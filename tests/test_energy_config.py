@@ -18,6 +18,6 @@ def test_strategy_and_risk_match_the_healthcare_bot():
 def test_universe_and_benchmark():
     config = load_config("bots/energy/config")
     universe = config.auto_tradeable_universe()
-    assert len(universe) == 27
+    assert len(universe) == 26
     assert {config.tickers[s].benchmark for s in universe} == {"XLE"}
     assert all(config.tickers[s].profit_target_pct == [1.5, 3.0] for s in universe)
