@@ -72,3 +72,27 @@ holding XLE over the same dates.
   are not in it).
 - **One sector, one bet:** these stocks move together with oil prices, so two open
   positions are close to one.
+
+## Result, stage 1 (2026-10-04): FAIL -- testing stopped; stage 2 not run
+
+`python3 scripts/compare_runs.py --first 2025-04-29 --last 2026-03-31 ensr_s1`, 232 sessions:
+
+| | |
+|---|---|
+| Trades | 32 (win rate 53%; average win +$11.41, average loss -$15.40 net) |
+| Before commission (spread included) | +$34.36 |
+| Commission (Fixed) | $71.38 |
+| **After commission** | **-$37.01** (-$0.16 per session) |
+| Exits | 15 stops, 13 trailing stops, 3 at 3:50 PM, 1 target |
+| For context: buying and holding XLE | **+47.7%** (about +$2,385 on $5,000; XOM +56%, CVX +48%, OXY +60% over the same dates) |
+
+Signals turned away by the stricter reclaim, by condition: dip longer than 4 bars 851; too
+far above VWAP 709; reclaim volume not above normal 600; too little volume history 43
+(counted per 5-minute evaluation).
+
+The closest result of any intraday test: a small profit before commission, which the
+commission turned into a small loss. 32 trades in 11 months is about one every week and a
+half, and the average loss is larger than the average win. Under section 4, stage 1 must
+be profitable after commission, so **stage 2 (2026-04-01 to 2026-10-02) was not run and the
+energy data for those months stays unseen**. Over the same months, simply holding XLE
+gained about 48%.
