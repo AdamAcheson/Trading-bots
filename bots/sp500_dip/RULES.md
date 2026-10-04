@@ -37,6 +37,11 @@ Benchmark: **SPY** (buy and hold, price only).
 - Each stock's split history (`data_cache/splits`). The price a stock actually traded at on
   a past date is the adjusted price times the split factors after that date; the $15
   minimum uses that real price.
+- **Note added 2026-10-04, before any backtest (data source, not a rule change):** Twelve
+  Data's split histories are not on the free plan (an early test call worked only because
+  AAPL is a free demo symbol). The real price is taken instead from **unadjusted daily
+  bars** (`data_cache/daily_unadjusted`, Twelve Data `adjust=none`), which are the prices as
+  actually traded. Indicators still use the split-adjusted bars.
 - Every signal uses **that day's close**. Buys and sells are made at the **next day's
   open**, so they can be placed by hand before the market opens.
 

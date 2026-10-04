@@ -43,16 +43,16 @@ def load(symbol: str):
 
 
 def load_universe():
-    """(data, member_since, missing): stocks with both daily bars and split history."""
+    """(data, member_since, missing): stocks with both split-adjusted and unadjusted bars."""
     members = {r["Symbol"]: r["Date added"] for r in csv.DictReader(open(MEMBERS))}
     data, missing = {}, []
     for sym in sorted(members):
         s = load(sym)
-        split_path = os.path.join(ROOT, "data_cache", "splits", f"{sym}.json")
-        if s is None or not os.path.exists(split_path):
+        raw_path = os.path.join(ROOT, "data_cache", "daily_unadjusted", f"{sym}.json")
+        if s is None or not os.path.exists(raw_path):
             missing.append(sym)
             continue
-        data[sym] = s.with_splits(json.load(open(split_path)))
+        data[sym] = s.with_real_closes({r[0]: r[4] for r in json.load(open(raw_path))})
     return data, members, missing
 
 

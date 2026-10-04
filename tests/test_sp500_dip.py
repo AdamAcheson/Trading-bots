@@ -27,25 +27,24 @@ def uptrend_then_dip(n=250, drop=(0.98, 0.97)):
     return closes, opens
 
 
-def test_split_factors():
-    splits = [dict(date="2020-08-31", from_factor=4, to_factor=1),
-              dict(date="2014-06-09", from_factor=7, to_factor=1)]
-    f = sd.split_factors(["2014-06-06", "2014-06-09", "2020-08-28", "2020-08-31"], splits)
-    assert f == [28.0, 4.0, 4.0, 1.0]
-    reverse = sd.split_factors(["2019-01-01"], [dict(date="2020-01-01", from_factor=1, to_factor=10)])
-    assert reverse == [0.1]
-
-
-def test_real_price_matches_apple_in_2014():
-    """Apple closed at $94.25 on 2014-06-10 (unadjusted, from Twelve Data)."""
-    daily = os_path("daily", "AAPL.json")
-    splits = os_path("splits", "AAPL.json")
-    if not (os.path.exists(daily) and os.path.exists(splits)):
+def test_real_price_matches_apple_around_its_splits():
+    """Apple split 7-for-1 on 2014-06-09 and 4-for-1 on 2020-08-31, so the real close is
+    28x the adjusted close before 2014-06-09, 4x until 2020-08-31, then equal."""
+    daily, raw = os_path("daily", "AAPL.json"), os_path("daily_unadjusted", "AAPL.json")
+    if not (os.path.exists(daily) and os.path.exists(raw)):
         pytest.skip("AAPL data not downloaded")
     rows = json.load(open(daily))
-    s = sd.Series(*[list(c) for c in zip(*rows)]).with_splits(json.load(open(splits)))
-    i = s.index["2014-06-10"]
-    assert s.real_closes[i] == pytest.approx(94.25, rel=0.002)
+    s = sd.Series(*[list(c) for c in zip(*rows)]).with_real_closes({r[0]: r[4] for r in json.load(open(raw))})
+    for day, factor in (("2014-06-06", 28), ("2014-06-10", 4), ("2020-08-28", 4), ("2020-08-31", 1)):
+        i = s.index[day]
+        assert s.real_closes[i] / s.closes[i] == pytest.approx(factor, rel=0.002)
+    assert s.real_closes[s.index["2014-06-10"]] == pytest.approx(94.25, rel=0.002)
+
+
+def test_missing_real_price_fails_the_minimum():
+    closes, opens = uptrend_then_dip()
+    s = series(closes, opens).with_real_closes({})
+    assert sd.entry_signal(s, len(closes) - 1, True, "2000-01-01") is None
 
 
 def os_path(*parts):
@@ -76,7 +75,6 @@ def test_real_price_under_15_is_skipped_even_if_adjusted_price_is_high():
     s.real_closes = [c / 10 for c in s.closes]                    # traded at about $6 then
     assert sd.entry_signal(s, i, True, "2000-01-01") is None
     s.real_closes = [c * 10 for c in s.closes]                    # adjusted low, real high: fine
-    s.closes = [c for c in s.closes]
     assert sd.entry_signal(s, i, True, "2000-01-01") is not None
 
 

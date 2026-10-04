@@ -3,7 +3,11 @@
 data_cache/daily/<SYMBOL>.json, for the swing bot (bots/swing/RULES.md). One credit per
 symbol; paced at 8 s for the free tier's 8 credits a minute; skips symbols already saved.
 
-Usage: python3 scripts/fetch_daily_history.py SYMBOL [SYMBOL ...]
+With --unadjusted, fetches the prices as actually traded (adjust=none) into
+data_cache/daily_unadjusted/<SYMBOL>.json instead (bots/sp500_dip/RULES.md uses them for the
+$15 minimum).
+
+Usage: python3 scripts/fetch_daily_history.py [--unadjusted] SYMBOL [SYMBOL ...]
 """
 
 import json
@@ -18,18 +22,21 @@ OUT = os.path.join(ROOT, "data_cache", "daily")
 
 
 def main(symbols) -> int:
+    adjust, out = "splits", OUT
+    if symbols and symbols[0] == "--unadjusted":
+        symbols, adjust, out = symbols[1:], "none", os.path.join(ROOT, "data_cache", "daily_unadjusted")
     key = os.environ.get("TWELVEDATA_API_KEY")
     if not key:
         print("TWELVEDATA_API_KEY is not set")
         return 2
-    os.makedirs(OUT, exist_ok=True)
+    os.makedirs(out, exist_ok=True)
     failed = []
     for i, sym in enumerate(symbols):
-        path = os.path.join(OUT, f"{sym}.json")
+        path = os.path.join(out, f"{sym}.json")
         if os.path.exists(path):
             continue
         j = requests.get("https://api.twelvedata.com/time_series", timeout=60, params=dict(
-            symbol=sym, interval="1day", outputsize=5000, order="ASC", adjust="splits",
+            symbol=sym, interval="1day", outputsize=5000, order="ASC", adjust=adjust,
             apikey=key)).json()
         if j.get("status") != "ok":
             print(f"  {sym}: {j.get('message', j)}"[:160], flush=True)

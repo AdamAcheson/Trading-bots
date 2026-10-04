@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Sequence
+from typing import Dict, Optional
 
 from strategy import swing
 from strategy.healthcare_momentum import rsi
@@ -26,23 +26,10 @@ class Params:
     slippage: float = 0.001
 
 
-def split_factors(dates: Sequence[str], splits: Sequence[dict]) -> List[float]:
-    """For each date, the factor that turns a split-adjusted price into the price the stock
-    actually traded at: the product of from_factor/to_factor over splits AFTER that date
-    (a 4-for-1 split multiplies earlier adjusted prices by 4)."""
-    out = []
-    for d in dates:
-        f = 1.0
-        for s in splits:
-            if s["date"] > d:
-                f *= s["from_factor"] / s["to_factor"]
-        out.append(f)
-    return out
-
-
 class Series(swing.Daily):
-    """swing.Daily plus SMA5, RSI(2) and the real close. Set `splits` before use via
-    `with_splits`; without it the real close equals the adjusted close."""
+    """swing.Daily plus SMA5, RSI(2) and the real close (the price actually traded, not
+    split-adjusted). Set it with `with_real_closes`; until then it equals the adjusted
+    close."""
 
     def __post_init__(self):
         super().__post_init__()
@@ -50,8 +37,10 @@ class Series(swing.Daily):
         self.rsi2 = rsi(self.closes, 2)
         self.real_closes = list(self.closes)
 
-    def with_splits(self, splits: Sequence[dict]) -> "Series":
-        self.real_closes = [c * f for c, f in zip(self.closes, split_factors(self.dates, splits))]
+    def with_real_closes(self, unadjusted: Dict[str, float]) -> "Series":
+        """`unadjusted` maps date -> close as actually traded; a date missing from it gets
+        None, which fails the price minimum."""
+        self.real_closes = [unadjusted.get(d) for d in self.dates]
         return self
 
 
@@ -72,7 +61,8 @@ def entry_signal(s: Series, i: int, market_ok: bool, member_since: Optional[str]
         return None
     if member_since is None or s.dates[i] < member_since:
         return None
-    if s.real_closes[i] < p.min_price or (s.dollar_vol[i] or 0) < p.min_dollar_volume:
+    real = s.real_closes[i]
+    if real is None or real < p.min_price or (s.dollar_vol[i] or 0) < p.min_dollar_volume:
         return None
     if s.sma200[i] is None or s.closes[i] <= s.sma200[i]:
         return None
