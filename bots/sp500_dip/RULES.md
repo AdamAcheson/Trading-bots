@@ -127,3 +127,47 @@ A pass allows paper trading first; it does not justify real money by itself.
 - **Dividends** are left out of both the strategy and SPY.
 - **Seen markets:** the 2017-2026 market has been studied in other contexts (not with this
   strategy or these stocks, apart from the 60 healthcare names used in earlier daily tests).
+
+## Result, stage 1 (2026-10-05): FAIL -- testing stopped; stage 2 not run
+
+`python3 scripts/backtest_sp500_dip.py --start 2006-01-01 --end 2016-12-31 --stage 1`
+(calendar from 2007-09-04, SPY's 200th day; all 503 members have both price files):
+
+| | Strategy | SPY buy and hold |
+|---|---|---|
+| $5,000 became | **$4,690 (-6.2%, -0.7% a year)** | +49.9% (+4.4% a year) |
+| Largest drawdown | -37.7% | -56.5% |
+| Return per unit of drawdown | -0.02 | 0.08 |
+
+| | |
+|---|---|
+| Closed trades | 483; win rate 59%; average win +$38.29, average loss -$56.98; average net -$0.57 |
+| Average holding | 3.5 trading days; invested on 57% of days |
+| Exits | 441 bounce (close above SMA5), 33 market switch, 8 time limit, 1 disaster stop |
+| Commission | $972 |
+| Signals | 28,699; 26,941 skipped for lack of a free slot, 1,273 for lack of settled cash |
+| Net by year | 2007 +771, 2008 -38, 2009 +354, 2010 -180, 2011 -1,153, 2012 -483, 2013 +281, 2014 +447, 2015 -544, 2016 +270 |
+| Context: $0 commission | $4,737 (-5.3%), 548 trades -- still a loss |
+
+**A bug was found and fixed before this result was recorded.** The first run (-14.1%)
+sized positions and charged the per-share commission on split-adjusted prices. For a stock
+that split later (Nvidia's 2011 adjusted price is under $1; it really traded near $19) that
+meant thousands of shares and about $26 commission per order instead of about 140 shares
+and $1. Shares and commission now use the real price (`sd.split_factor`, tested against
+Nvidia's 2011 data); profit and loss were unaffected. This brings the code in line with the
+locked rules (section 7) and changes no rule. Entries and exits of sample trades were
+checked by hand against the raw bars.
+
+How close it was, stated plainly:
+- **Dividends are left out** (section 9). Holding stocks on 57% of days, the strategy would
+  have collected some dividends, very roughly $300-500 over the 9 years.
+- **AIG, 2011-01-19 (-$484, the worst trade), is partly a data artifact.** AIG handed
+  shareholders warrants on 2011-01-20 and the share price dropped by roughly their value;
+  the data does not count the warrants.
+- With both, stage 1 would be **around break-even**, still nowhere near SPY's +50%. The
+  rules were fixed in advance, so the verdict stands: not profitable after costs.
+
+Why it lost: 59% of trades won, but the average loss ($57) was half again as large as the
+average win ($38). The dips that kept falling cost more than the bounces earned. The market
+switch did its job on drawdowns (-37.7% against SPY's -56.5%), but the rules required at
+least halving SPY's drawdown, and the strategy earned nothing for the risk it took.

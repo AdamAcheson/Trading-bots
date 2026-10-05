@@ -44,6 +44,17 @@ class Series(swing.Daily):
         return self
 
 
+def split_factor(s: Series, i: int) -> float:
+    """Real price / split-adjusted price on day i (the splits still to come after it), from
+    day i or, if that day has no real close, the day before; 1.0 if neither has one.
+    Shares and per-share commission must use real prices: a 4-for-1 split later means four
+    times fewer shares were actually bought than the adjusted price suggests."""
+    for j in (i, i - 1):
+        if j >= 0 and s.real_closes[j] and s.closes[j] > 0:
+            return s.real_closes[j] / s.closes[j]
+    return 1.0
+
+
 def gapped(s: Series, i: int, max_gap: float) -> bool:
     """True if the open on day i or i-1 was max_gap or more away from the prior close."""
     for j in (i, i - 1):

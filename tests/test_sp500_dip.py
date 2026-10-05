@@ -119,3 +119,31 @@ def test_exit_reasons():
 ])
 def test_buy_amount(cash, account, expected):
     assert sd.buy_amount(cash, account) == expected
+
+
+def test_split_factor_uses_the_real_price():
+    closes, opens = uptrend_then_dip()
+    s = series(closes, opens).with_real_closes({})
+    assert sd.split_factor(s, 5) == 1.0                           # no real price: no adjustment
+    s.real_closes = [c * 40 for c in s.closes]                    # e.g. 4-for-1 then 10-for-1 later
+    assert sd.split_factor(s, 5) == pytest.approx(40)
+    s.real_closes[5] = None
+    assert sd.split_factor(s, 5) == pytest.approx(40)             # falls back to the day before
+
+
+def test_nvidia_2011_shares_and_commission_use_the_real_price():
+    """Nvidia's adjusted 2011 price is under $1; it really traded near $19, so $2,500 buys
+    about 130 shares and the commission is the $1 minimum, not ~$26 on 5,000+ shares."""
+    daily, raw = os_path("daily", "NVDA.json"), os_path("daily_unadjusted", "NVDA.json")
+    if not (os.path.exists(daily) and os.path.exists(raw)):
+        pytest.skip("NVDA data not downloaded")
+    s = sd.Series(*[list(c) for c in zip(*json.load(open(daily)))]).with_real_closes(
+        {r[0]: r[4] for r in json.load(open(raw))})
+    i = s.index["2011-03-10"]
+    real_fill = s.opens[i] * sd.split_factor(s, i)
+    assert 10 < real_fill < 30
+    shares = int(2500 // real_fill)
+    from execution.costs import TransactionCostModel
+    fixed = TransactionCostModel(commission_per_share=0.005, commission_min_per_order=1.0,
+                                 commission_max_pct_of_value=1.0)
+    assert 80 < shares < 250 and fixed.commission(real_fill, shares) == 1.0

@@ -2,7 +2,7 @@
 
 ## The answer in one paragraph
 
-Over about a month, nine trading strategies were built and tested on two sectors,
+Over about a month, ten trading strategies were built and tested on two sectors and the S&P 500,
 silver and gold mining and large-cap healthcare, for a $5,000 cash account at Interactive
 Brokers. Each was tested fairly: the rules were written down and locked before any
 result was seen, costs were included, and the decision was made on data the rules had
@@ -24,15 +24,16 @@ to pause strategy building and not trade real money with any of these bots.
 | 7 | Mining: buy dips at the close, sell at the open | Mining | 2007-2018 | **-33.0%** | GDX -44.0% |
 | 8 | Healthcare: buy the day after a news jump, hold ~2 months | Healthcare | 2007-2018 | **-29.7%** | XLV +151.5% |
 | 9 | GDX overnight only: buy at the close, sell at the open, every day | Mining | 2007-2018 | **-44.7%** (+45.6% at $0 commission) | GDX -44.0% |
+| 10 | S&P 500: buy sharp dips in strong stocks, only while SPY is above its 200-day average | S&P 500 | 2007-2016 | **-6.2%** (-5.3% at $0 commission) | SPY +49.9% |
 
-Strategies 1-5 trade within the day and use 5-minute bars. Strategies 6-9 hold overnight or for days
+Strategies 1-5 trade within the day and use 5-minute bars. Strategies 6-10 hold overnight or for days
 to months and use 20 years of daily bars. Where a strategy failed its first stage, the
 second was not run, as its rules required.
 
 Details: `docs/BACKTEST_RESULTS.md` (1-2), `bots/healthcare/RULES.md` (3),
 `bots/healthcare/MOMENTUM_RULES.md` (4-5), `bots/swing/RULES.md` (6),
 `bots/mining_overnight/RULES.md` (7), `bots/healthcare_news/RULES.md` (8),
-`bots/gdx_overnight/RULES.md` (9).
+`bots/gdx_overnight/RULES.md` (9), `bots/sp500_dip/RULES.md` (10).
 
 ## What was learned
 

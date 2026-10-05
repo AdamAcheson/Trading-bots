@@ -82,12 +82,13 @@ def run(start, end, commission=True, p: sd.Params = sd.Params(), universe=None):
                 continue
             h = holdings.pop(sym)
             fill = data[sym].opens[i] * (1 - p.slippage)
-            c = costs.commission(fill, h["shares"], sell=True)
+            f1 = sd.split_factor(data[sym], i)
+            c = costs.commission(fill * f1, round(h["shares"] / f1), sell=True)   # real price, real shares
             comm_paid += c
             unsettled.append((k + 1, fill * h["shares"] - c))
             gross = (fill - h["entry"]) * h["shares"]
-            trades.append(dict(symbol=sym, entry_date=h["date"], exit_date=day, entry=h["entry"],
-                               exit=fill, shares=h["shares"], reason=why, gross=gross,
+            trades.append(dict(symbol=sym, entry_date=h["date"], exit_date=day, entry=h["entry"] * h["f0"],
+                               exit=fill * f1, shares=h["real_shares"], reason=why, gross=gross,
                                net=gross - h["buy_comm"] - c, days=i - h["i0"]))
             del to_sell[sym]
         for sym in to_buy:
@@ -100,17 +101,22 @@ def run(start, end, commission=True, p: sd.Params = sd.Params(), universe=None):
             if amount <= 0:
                 skipped_cash += 1
                 continue
-            shares = int(amount // fill)
-            c = costs.commission(fill, shares)
-            while shares > 0 and shares * fill + c > cash:
+            # Size and charge commission in real shares at the real price; hold the position in
+            # split-adjusted units so later valuation uses the adjusted series.
+            f0 = sd.split_factor(s, i)
+            real_fill = fill * f0
+            shares = int(amount // real_fill)
+            c = costs.commission(real_fill, shares)
+            while shares > 0 and shares * real_fill + c > cash:
                 shares -= 1
-                c = costs.commission(fill, shares)
+                c = costs.commission(real_fill, shares)
             if shares <= 0:
                 skipped_cash += 1
                 continue
-            cash -= shares * fill + c
+            cash -= shares * real_fill + c
             comm_paid += c
-            holdings[sym] = dict(entry=fill, shares=shares, date=day, i0=i, buy_comm=c)
+            holdings[sym] = dict(entry=fill, shares=shares * f0, real_shares=shares, f0=f0,
+                                 date=day, i0=i, buy_comm=c)
         to_buy = []
 
         # close: value, exits, tomorrow's buys
