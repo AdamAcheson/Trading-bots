@@ -2,9 +2,9 @@
 
 ## The answer in one paragraph
 
-Over about a month, ten trading strategies were built and tested on two sectors and the S&P 500,
-silver and gold mining and large-cap healthcare, for a $5,000 cash account at Interactive
-Brokers. Each was tested fairly: the rules were written down and locked before any
+Over about a month, ten trading strategies were built and tested on two sectors (silver
+and gold mining, large-cap healthcare) and on the S&P 500, for a $5,000 cash account at
+Interactive Brokers. Each was tested fairly: the rules were written down and locked before any
 result was seen, costs were included, and the decision was made on data the rules had
 not been tuned on. **None passed. None beat simply holding the sector's ETF (GDX or XLV)
 over the deciding period, and almost all lost money after costs.** The recommendation is
