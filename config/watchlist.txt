@@ -1,0 +1,3 @@
+# Morning alerts watchlist (scripts/morning_scan.py). One or more tickers per line,
+# separated by spaces or commas; anything after # is ignored.
+# Each stock costs one Twelve Data credit per scan; keep the list to about 50.
