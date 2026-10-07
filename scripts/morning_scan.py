@@ -2,9 +2,10 @@
 """Morning alerts for the watchlist in config/watchlist.txt (see src/alerts.py).
 
 Fetches recent daily bars from Twelve Data (one credit per stock, paced for the free tier's
-8 credits a minute), checks the latest completed session for a move of 4% or more, volume
-at least 2x normal, or a new 52-week high or low, and prints a short summary. A scheduled
-routine runs it each weekday morning and sends the summary to the account holder.
+8 credits a minute; standard library only, nothing to install), checks the latest completed
+session for a move of 4% or more, volume at least 2x normal, or a new 52-week high or low, and
+prints a short summary. A scheduled routine runs it each weekday morning and sends the summary
+to the account holder.
 
 Usage:
     python3 scripts/morning_scan.py [--watchlist config/watchlist.txt]
@@ -13,13 +14,14 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from zoneinfo import ZoneInfo
-
-import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
@@ -32,9 +34,10 @@ ET = ZoneInfo("America/New_York")
 def fetch(symbol: str, key: str):
     """Daily bars, oldest first, split-adjusted; today's bar is dropped before the 4 pm
     close so only completed sessions are judged."""
-    j = requests.get("https://api.twelvedata.com/time_series", timeout=60, params=dict(
-        symbol=symbol, interval="1day", outputsize=300, order="ASC", adjust="splits",
-        apikey=key)).json()
+    query = urllib.parse.urlencode(dict(symbol=symbol, interval="1day", outputsize=300, order="ASC",
+                                        adjust="splits", apikey=key))
+    with urllib.request.urlopen(f"https://api.twelvedata.com/time_series?{query}", timeout=60) as response:
+        j = json.load(response)
     if j.get("status") != "ok":
         raise RuntimeError(str(j.get("message", j))[:120])
     bars = [alerts.Bar(v["datetime"][:10], float(v["open"]), float(v["high"]), float(v["low"]),
