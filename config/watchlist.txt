@@ -1,3 +1,21 @@
 # Morning alerts watchlist (scripts/morning_scan.py). One or more tickers per line,
 # separated by spaces or commas; anything after # is ignored.
 # Each stock costs one Twelve Data credit per scan; keep the list to about 50.
+
+# Mining and metals (the mining bot's list, config/tickers.yaml)
+AG AUGO BHP CCJ CDE CMP CRML DRD EQX EXK FCX FSM GFI HBM HL HMY MP PAAS PPTA RIO
+SCCO SIL SSRM SVM UEC USAR VALE VZLA WPM
+
+# Banks
+BAC   # Bank of America (requested as "BOA")
+HBAN  # Huntington Bancshares (the data provider mislabels it "HubSpot"; prices are correct)
+PNC KEY
+
+# Healthcare
+ABT TMO GILD SYK BSX MDT
+
+# Consumer
+F BIRK NKE CHWY
+
+# Funds
+NASA  # Tema Space Innovators ETF
