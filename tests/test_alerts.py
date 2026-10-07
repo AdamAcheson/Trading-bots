@@ -101,3 +101,54 @@ def test_live_summary():
     quiet = live_summary([LiveAlert("CCC", 30.0, 0.06, ["up 6.0%"], False)], 44, [], "12:20")
     assert quiet.splitlines()[0] == "Live check (12:20 ET): nothing new in 44 stocks"
     assert live_summary([], 44, [], "12:20").count("\n") == 1
+
+
+# ---- the live scan's wiring (network calls replaced) ----
+
+import os
+import sys
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+import morning_scan as ms  # noqa: E402
+
+
+def daily(price, prev=100.0, today=None):
+    today = today or datetime.now(ZoneInfo("America/New_York")).date().isoformat()
+    older = [Bar(f"2025-{i:04d}", c, c, c, c, 1.0) for i, c in enumerate(YEAR_CLOSES)]
+    return older + [Bar("2026-01-01", prev, prev, prev, prev, 1.0), Bar(today, price, price, price, price, 1.0)]
+
+
+def test_live_scan_new_old_and_failed(monkeypatch):
+    prices = {"NEWW": 105.0, "OLDD": 106.0, "QUIT": 100.1}
+
+    def fake_fetch_daily(sym, key):
+        if sym == "BADD":
+            raise RuntimeError("boom")
+        return daily(prices[sym])
+
+    monkeypatch.setattr(ms, "fetch_daily", fake_fetch_daily)
+    monkeypatch.setattr(ms, "earlier_price", lambda sym, key, today: {"NEWW": 100.2, "OLDD": 105.0}[sym])
+    text = ms.live_scan(["QUIT", "NEWW", "OLDD", "BADD"], "key")
+    lines = text.splitlines()
+    assert lines[0].endswith("ET): 1 new of 3 stocks") and lines[0].startswith("Live alerts")
+    assert lines[1].startswith("- NEWW $105.00 (+5.0% today): up 5.0%, new 52-week high")
+    assert "Still flagged from earlier: OLDD" in text
+    assert "Could not fetch: BADD (boom)" in text
+
+
+def test_live_scan_market_closed(monkeypatch):
+    monkeypatch.setattr(ms, "fetch_daily", lambda sym, key: daily(105.0, today="2020-01-02"))
+    assert "the market is closed today" in ms.live_scan(["AAA", "BBB"], "key")
+
+
+def test_earlier_price_uses_the_second_latest_hourly_bar_of_today(monkeypatch):
+    def hourly(values):
+        return lambda path, key, **p: {"values": [dict(datetime=d, close=c) for d, c in values]}
+
+    monkeypatch.setattr(ms, "get_json", hourly([("2026-10-07 10:30:00", "9.54"), ("2026-10-07 09:30:00", "9.575"),
+                                                 ("2026-10-06 15:30:00", "10.095")]))
+    assert ms.earlier_price("UEC", "key", "2026-10-07") == 9.575
+    monkeypatch.setattr(ms, "get_json", hourly([("2026-10-07 09:30:00", "9.5"), ("2026-10-06 15:30:00", "10.0")]))
+    assert ms.earlier_price("UEC", "key", "2026-10-07") is None            # first hour of the day
