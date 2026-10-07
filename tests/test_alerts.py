@@ -60,3 +60,44 @@ def test_summary():
     assert "Could not fetch: CCC (error)" in text
     assert text.endswith("not a recommendation.")
     assert "nothing flagged in 25 stocks" in summary([], 25, [], "2026-10-02")
+
+
+# ---- live (during the day) ----
+
+from alerts import LiveAlert, check_live, live_reasons, live_summary
+
+YEAR_CLOSES = [100.0 + (0.5 if i % 2 else -0.5) for i in range(252)]      # 99.5 .. 100.5
+
+
+def test_live_reasons():
+    assert live_reasons(100.0, 100.0, YEAR_CLOSES) == {}
+    assert live_reasons(105.0, 100.0, YEAR_CLOSES) == {"move": "up 5.0%", "high": "new 52-week high"}
+    assert live_reasons(96.0, 100.0, YEAR_CLOSES) == {"move": "down 4.0%", "low": "new 52-week low"}
+    assert live_reasons(103.0, 100.0, YEAR_CLOSES) == {"high": "new 52-week high"}      # under 4%
+    assert live_reasons(105.0, 100.0, YEAR_CLOSES[:100]) == {"move": "up 5.0%"}         # short history
+
+
+def test_check_live_new_versus_already_flagged():
+    a = check_live("X", 105.0, 100.0, YEAR_CLOSES)
+    assert a and a.new and a.reasons == ["up 5.0%", "new 52-week high"]
+    assert check_live("X", 100.0, 100.0, YEAR_CLOSES) is None
+    still = check_live("X", 106.0, 100.0, YEAR_CLOSES, earlier_price=105.0)
+    assert still and not still.new                                  # both conditions held an hour ago
+    partly = check_live("X", 106.0, 100.0, YEAR_CLOSES, earlier_price=102.0)
+    assert partly and partly.new                                    # the 4% move is new, the high was not
+    fresh = check_live("X", 105.0, 100.0, YEAR_CLOSES, earlier_price=100.2)
+    assert fresh and fresh.new
+
+
+def test_live_summary():
+    alerts_ = [LiveAlert("AAA", 10.5, 0.05, ["up 5.0%"], True),
+               LiveAlert("BBB", 20.0, -0.08, ["down 8.0%"], True),
+               LiveAlert("CCC", 30.0, 0.06, ["up 6.0%"], False)]
+    text = live_summary(alerts_, 44, ["DDD (error)"], "11:20")
+    lines = text.splitlines()
+    assert lines[0] == "Live alerts (11:20 ET): 2 new of 44 stocks"
+    assert lines[1].startswith("- BBB") and "(-8.0% today)" in lines[1]
+    assert "Still flagged from earlier: CCC" in text and "Could not fetch: DDD (error)" in text
+    quiet = live_summary([LiveAlert("CCC", 30.0, 0.06, ["up 6.0%"], False)], 44, [], "12:20")
+    assert quiet.splitlines()[0] == "Live check (12:20 ET): nothing new in 44 stocks"
+    assert live_summary([], 44, [], "12:20").count("\n") == 1

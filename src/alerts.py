@@ -86,3 +86,66 @@ def summary(alerts: Sequence[Alert], scanned: int, failed: Sequence[str], sessio
         lines.append(f"Could not fetch: {', '.join(failed)}")
     lines.append("Information only, not a recommendation.")
     return "\n".join(lines)
+
+
+# ---- during the trading day -------------------------------------------------------------
+# Volume is left out of the live check: the free data plan's feed for the current session
+# carries only a small share of the market's real volume, so "2x normal" cannot be judged
+# until the session is complete (the morning scan does it).
+
+@dataclass
+class LiveAlert:
+    symbol: str
+    price: float
+    change: float                      # price versus the previous close
+    reasons: List[str]
+    new: bool                          # not already true at the earlier reading
+
+
+def live_reasons(price: float, prev_close: float, closes: Sequence[float]) -> dict:
+    """What is true at `price`: {kind: text} with kinds 'move', 'high', 'low'.
+    `closes` are the previous sessions' closes (the last 252 are used)."""
+    out = {}
+    if prev_close > 0:
+        change = price / prev_close - 1
+        if abs(change) >= BIG_MOVE:
+            out["move"] = f"{'up' if change > 0 else 'down'} {abs(change):.1%}"
+    year = list(closes)[-YEAR:]
+    if len(year) == YEAR:
+        if price > max(year):
+            out["high"] = "new 52-week high"
+        elif price < min(year):
+            out["low"] = "new 52-week low"
+    return out
+
+
+def check_live(symbol: str, price: float, prev_close: float, closes: Sequence[float],
+               earlier_price: Optional[float] = None) -> Optional[LiveAlert]:
+    """A live alert if a condition holds now. `earlier_price` is the reading from about an
+    hour ago: a condition already true then is not new."""
+    now = live_reasons(price, prev_close, closes)
+    if not now:
+        return None
+    before = live_reasons(earlier_price, prev_close, closes) if earlier_price is not None else {}
+    is_new = any(kind not in before for kind in now)
+    change = price / prev_close - 1 if prev_close > 0 else 0.0
+    return LiveAlert(symbol, price, change, list(now.values()), is_new)
+
+
+def live_summary(alerts: Sequence[LiveAlert], scanned: int, failed: Sequence[str], clock: str) -> str:
+    """Only the newly flagged stocks are listed in full; ones flagged earlier are named."""
+    new = sorted((a for a in alerts if a.new), key=lambda a: -abs(a.change))
+    old = [a.symbol for a in alerts if not a.new]
+    lines = []
+    if new:
+        lines.append(f"Live alerts ({clock} ET): {len(new)} new of {scanned} stocks")
+        for a in new:
+            lines.append(f"- {a.symbol} ${a.price:,.2f} ({a.change:+.1%} today): {', '.join(a.reasons)}")
+    else:
+        lines.append(f"Live check ({clock} ET): nothing new in {scanned} stocks")
+    if old:
+        lines.append(f"Still flagged from earlier: {', '.join(old)}")
+    if failed:
+        lines.append(f"Could not fetch: {', '.join(failed)}")
+    lines.append("Information only, not a recommendation. Volume is checked in the morning scan.")
+    return "\n".join(lines)
