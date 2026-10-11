@@ -206,3 +206,21 @@ are unchanged.
   the first possible trades are in late September 2023. PAAS only exists in the data from
   2025-08-15 and SVM, HL, EXK and VZLA from 2023-09-06; stocks missing a day are skipped that day.
 - Benchmark: SIL buy and hold. If this run is still under 30 trades it is inconclusive.
+
+### Full-history silver results (run 2026-10-11, section 12 rules)
+
+`python3 scripts/backtest_gap_go.py --start 2023-09-07 --end 2026-09-30 --tag sg_full` (and
+`--end 2025-03-31 --tag sg_early`).
+
+| Run | Sessions | Trades | Win rate | Gross | Commission | Net | 90% lower bound / session | SIL | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| **Full 2023-09-07..2026-09-30** | 769 | **12** | 42% | -$25.13 | $25.34 | **-$50.47** | -$0.26 | +243.0% | **Inconclusive (<30)** |
+| New stretch only 2023-09-07..2025-03-31 | 392 | 0 | | | | $0 | | +57.3% | Inconclusive |
+
+**The new stretch produced no trades because of the $10 price gate (section 3):** from 2023-09 to
+2025-03 the highest closes were AG $8.07, HL $7.53, EXK $5.55, SVM $5.06 and VZLA $2.40, so
+none of them was ever at $10. The gap condition alone was met on 88 stock-days in that stretch
+(funnel: 1,958 stock-days; D2 1,097; D3 88; price 0). All 12 trades are therefore the ones
+already reported in 2025-09 to 2026-09 (the primary and context B runs, less overlap). The gate
+was not changed after seeing this. A version with a lower gate would be a new, separately dated
+test.
