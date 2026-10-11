@@ -259,3 +259,15 @@ point estimate is clearly negative (net -$250.22, gross also negative before com
 bootstrap bound is below zero. Commission is large here ($117.27) because $2,500 buys 500 to 800
 shares of a $3 to $5 stock at $0.005 a share. The half-cent spread assumption is likely generous
 at these prices (section 13).
+
+## 14. Amendment 2026-10-11: all 29 mining stocks over the full history (locked before the run)
+
+At the account holder's request the strategy is run on the 29 stocks of the mining universe
+(`config/tickers.yaml`, strategy mining; includes the SIL ETF, as in the earlier mining run).
+Sections 1 to 8 are unchanged (I1 untested).
+- **Decision run:** all 29 stocks, 2023-09-07 to 2026-09-30, **$3 price floor** (the floor the
+  account holder last asked for, section 13), one continuous $5,000 account, section 7 pass rule.
+- **Context run (not for the decision):** the same, with the original **$10** floor.
+- A stock is only traded from the date its 5-minute data starts (late 2023 for most; AUGO, CCJ,
+  HBM, PAAS, USAR, VALE and WPM only from 2025) and needs 200 daily bars and 14 prior sessions.
+- Benchmark: SIL buy and hold. Fewer than 30 trades is inconclusive. Not pooled with other runs.
