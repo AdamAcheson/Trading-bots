@@ -164,3 +164,14 @@ Context: 15,060; 7,760; 56; 56; 54; 31; 25; 24. XLV buy and hold: +16.0% (primar
 (+$126.22); without it the primary run is about -$134. Largest drawdown -$135.60 (primary),
 -$250.25 (context). Result: no pass; commission exceeds the gross edge in the context run and
 turns the primary run's small gross gain negative.
+
+## 11. Amendment 2026-10-11: the same rules on the energy stocks (locked before the run)
+
+At the account holder's request, run unchanged on the 26 energy stocks of
+`bots/energy/config/tickers.yaml`. Sections 1 to 8 are unchanged (I1 still untested; same
+entries, exits, size, costs, $10 gate, 30-trade bar and bootstrap).
+- **Energy primary:** all 26 stocks, 2026-04-01 to 2026-09-30 (5-minute data runs to 2026-10-02).
+- **Energy context:** the same 26 stocks, 2025-04-01 to 2026-03-31.
+- Benchmark: XLE buy and hold. Daily history for AR, FTI, MTDR, NOV, OVV, PR, RRC, SM and XLE was
+  not in the cache and is downloaded first (split-adjusted, same source as the others).
+- Same pass rule as section 7; not pooled with the silver or healthcare results.
