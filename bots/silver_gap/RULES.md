@@ -224,3 +224,18 @@ none of them was ever at $10. The gap condition alone was met on 88 stock-days i
 already reported in 2025-09 to 2026-09 (the primary and context B runs, less overlap). The gate
 was not changed after seeing this. A version with a lower gate would be a new, separately dated
 test.
+
+## 13. Amendment 2026-10-11: a $3 price floor for silver (locked before the run)
+
+At the account holder's request the price gate of section 3 becomes **$3.00** (signal bar close
+at least $3) instead of $10, for this run only. Everything else is unchanged (conditions D1, D2,
+D3, I2, I3; I1 untested; entries, exits, size, costs, the 30-trade bar and the bootstrap).
+- **Decision run:** the six silver miners, 2023-09-07 to 2026-09-30, one continuous $5,000
+  account, pass rule of section 7. The $10 results above stay as reported and are not replaced.
+- **Also reported:** 2023-09-07 to 2025-03-31 alone, and the trades by stock and by year.
+- **Costs are unchanged and matter more here:** the half-spread stays $0.005 a share, which is
+  about 0.17% of a $3 stock (0.05% of a $10 stock), and the 0.5% stop floor is only 1.5 cents at
+  $3. The real spread on a $3 to $5 stock during a gap-up open is often wider than a half-cent,
+  so these results are likely to be flattering, not harsh. Commission is $0.005 a share, which
+  is about $4 a side on a $2,500 position in a $3 stock.
+- Under 30 trades is inconclusive.
