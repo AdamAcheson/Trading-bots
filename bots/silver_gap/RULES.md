@@ -175,3 +175,17 @@ entries, exits, size, costs, $10 gate, 30-trade bar and bootstrap).
 - Benchmark: XLE buy and hold. Daily history for AR, FTI, MTDR, NOV, OVV, PR, RRC, SM and XLE was
   not in the cache and is downloaded first (split-adjusted, same source as the others).
 - Same pass rule as section 7; not pooled with the silver or healthcare results.
+
+### Energy results (run 2026-10-11, section 11 rules)
+
+`python3 scripts/backtest_gap_go.py --universe energy --start ... --end ... --tag sg_e1` (and `sg_e2`).
+
+| Run | Sessions | Trades | Win rate | Gross | Commission | Net | 90% lower bound / session | XLE | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| **Energy primary** 2026-04-01..09-30 | 126 | **7** | 29% | -$26.23 | $14.06 | **-$40.29** | -$0.97 | +2.9% | **Inconclusive (<30)** |
+| Energy context 2025-04-01..2026-03-31 | 251 | 11 | 36% | +$66.77 | $22.10 | +$44.67 | -$0.45 | +31.0% | Inconclusive |
+
+Funnel, primary (stock-days): 3,276; D2 2,984; D3 43; price 43; D1 36; I2 28; I3 7; taken 7.
+Context: 6,526; 3,515; 48; 48; 46; 18; 15; 11. The context run's gain comes mostly from FTI (3
+trades, +$117.93); without FTI it is about -$73. Neither run reaches 30 trades, so neither is a
+pass or a fail; the primary run is negative and the context run's bootstrap bound is below zero.

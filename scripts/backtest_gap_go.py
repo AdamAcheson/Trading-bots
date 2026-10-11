@@ -45,8 +45,8 @@ def load_daily(symbol: str):
 
 
 def universe_symbols(kind: str):
-    if kind == "healthcare":
-        return sorted(load_config(os.path.join(ROOT, "bots", "healthcare", "config")).auto_tradeable_universe())
+    if kind in ("healthcare", "energy"):
+        return sorted(load_config(os.path.join(ROOT, "bots", kind, "config")).auto_tradeable_universe())
     cfg = load_config()
     if kind == "silver":
         return sorted(t for t, v in cfg.tickers.items() if v.sector == "silver_miner" and v.strategy == "mining")
@@ -237,13 +237,13 @@ def main(argv=None) -> int:
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", required=True)
     ap.add_argument("--tag", required=True)
-    ap.add_argument("--universe", choices=("silver", "mining", "healthcare"), default="silver")
+    ap.add_argument("--universe", choices=("silver", "mining", "healthcare", "energy"), default="silver")
     a = ap.parse_args(argv)
     p = gg.Params()
     symbols = universe_symbols(a.universe)
     print(f"Loading {len(symbols)} stocks: {' '.join(symbols)}", flush=True)
     data = load_series(symbols, p)
-    bench_sym = "XLV" if a.universe == "healthcare" else "SIL"
+    bench_sym = {"healthcare": "XLV", "energy": "XLE"}.get(a.universe, "SIL")
     sil = load_series([bench_sym], p).get(bench_sym) if bench_sym not in data else data[bench_sym]
     days = sorted({d for s in data.values() for d in s.days if a.start <= d <= a.end})
     costs = TransactionCostModel.from_config(load_config().risk)         # IBKR Pro Fixed
