@@ -189,3 +189,20 @@ Funnel, primary (stock-days): 3,276; D2 2,984; D3 43; price 43; D1 36; I2 28; I3
 Context: 6,526; 3,515; 48; 48; 46; 18; 15; 11. The context run's gain comes mostly from FTI (3
 trades, +$117.93); without FTI it is about -$73. Neither run reaches 30 trades, so neither is a
 pass or a fail; the primary run is negative and the context run's bootstrap bound is below zero.
+
+## 12. Amendment 2026-10-11: silver over the full 5-minute history (locked before the run)
+
+At the account holder's request, the silver test is extended back to the start of the 5-minute
+data (the first partial session is 2023-09-06; the first full one is 2023-09-07). Sections 1 to 8
+are unchanged.
+- **Decision run (replaces the primary run's role for the verdict):** the six silver miners,
+  2023-09-07 to 2026-09-30, one continuous account starting at $5,000. The section 7 pass rule
+  applies to this run (net above zero, at least 30 trades, bootstrap 90% lower bound above zero).
+  It is the three earlier silver runs plus the 2023-09 to 2025-03 gap, so the 2026-04 to 2026-09
+  trades are the same ones already reported.
+- **Also reported, not for the decision:** the new stretch alone (2023-09-07 to 2025-03-31) and
+  the result split by calendar year.
+- The first signals need 14 prior sessions of 5-minute data (RVOL) and 200 daily bars (D2), so
+  the first possible trades are in late September 2023. PAAS only exists in the data from
+  2025-08-15 and SVM, HL, EXK and VZLA from 2023-09-06; stocks missing a day are skipped that day.
+- Benchmark: SIL buy and hold. If this run is still under 30 trades it is inconclusive.
