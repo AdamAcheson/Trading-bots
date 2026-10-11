@@ -271,3 +271,23 @@ Sections 1 to 8 are unchanged (I1 untested).
 - A stock is only traded from the date its 5-minute data starts (late 2023 for most; AUGO, CCJ,
   HBM, PAAS, USAR, VALE and WPM only from 2025) and needs 200 daily bars and 14 prior sessions.
 - Benchmark: SIL buy and hold. Fewer than 30 trades is inconclusive. Not pooled with other runs.
+
+### Mining-universe results (run 2026-10-11, section 14 rules)
+
+`python3 scripts/backtest_gap_go.py --universe mining --min-price 3 --start 2023-09-07 --end 2026-09-30 --tag sg_m3`
+(and `--min-price 10 --tag sg_m10`).
+
+| Run | Sessions | Trades | Win rate | Gross | Commission | Net | 90% lower bound / session | Largest drawdown | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| **Decision: 29 stocks, $3 floor** | 769 | **107** | 40% | -$219.18 | $311.86 | **-$531.04** | -$1.74 | -$677.64 | **FAIL** |
+| Context: 29 stocks, $10 floor | 769 | 82 | 41% | -$167.10 | $168.44 | -$335.54 | -$1.40 | -$632.06 | FAIL |
+
+SIL buy and hold over the same dates: +243.0%. Decision run funnel (stock-days): 18,895; D2
+12,295; D3 1,059; price 1,034; D1 877; I2 505; I3 179; taken 107. Exits: 55 stops, 52 trailing
+stops. Avg win $35.01, avg loss -$31.82, avg R before commission -0.06 (about zero: the entries
+have no edge before costs, and commission turns that into a loss). Winners by stock: PPTA +$221.82
+(3 trades), MP +$167.51 (7), CMP +$66.27, FSM +$52.18; losers: CRML -$229.49 (9 trades), USAR
+-$171.45 (3), CDE -$107.32, SVM -$105.07, HL -$100.78. Worst month 2025-10 (-$369.25, 7
+trades). First run in this study with at least 30 trades: net below zero and a bootstrap lower
+bound below zero, so by the section 7 rule it fails. The $10 context run fails the same way.
+I1 was not tested; it can only remove trades from these.
