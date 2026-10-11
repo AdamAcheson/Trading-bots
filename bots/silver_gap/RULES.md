@@ -148,3 +148,19 @@ still untested, same entries, exits, size, costs, $10 price gate, 30-trade bar a
   silver result above, and the two are not pooled.
 Healthcare is a slower sector than silver miners; a 3% gap there is usually an earnings or news
 event. That is a reason these runs may find more or fewer trades, not a reason to change a rule.
+
+### Healthcare results (run 2026-10-11, section 10 rules)
+
+`python3 scripts/backtest_gap_go.py --universe healthcare --start ... --end ... --tag sg_h1` (and `sg_h2`).
+
+| Run | Sessions | Trades | Win rate | Gross | Commission | Net | 90% lower bound / session | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| **Healthcare primary** 2026-04-01..09-29 | 125 | **13** | 31% | +$18.09 | $26.03 | **-$7.94** | -$1.86 | **Inconclusive (<30)** |
+| Healthcare context 2025-04-01..2026-03-31 | 251 | 24 | 38% | -$117.06 | $48.06 | -$165.12 | -$1.70 | Inconclusive |
+
+Funnel, primary (stock-days): 7,500; D2 4,478; D3 57; price 57; D1 54; I2 21; I3 15; taken 13.
+Context: 15,060; 7,760; 56; 56; 54; 31; 25; 24. XLV buy and hold: +16.0% (primary), +0.8%
+(context). Primary exits: 8 stops, 5 trailing stops. The only large winner was MRNA 2026-08-19
+(+$126.22); without it the primary run is about -$134. Largest drawdown -$135.60 (primary),
+-$250.25 (context). Result: no pass; commission exceeds the gross edge in the context run and
+turns the primary run's small gross gain negative.
