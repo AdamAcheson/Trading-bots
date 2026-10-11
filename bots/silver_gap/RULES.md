@@ -134,3 +134,17 @@ Reading: the strategy is far too selective to judge (4 trades in six months; the
 bar is 30). The point estimate is slightly negative in all three runs and commission is larger than
 the gross result in each. Nothing here supports trading it. A pass was not reached and no rule was
 changed after seeing these numbers.
+
+## 10. Amendment 2026-10-11: the same rules on the healthcare stocks (locked before the run)
+
+At the account holder's request the strategy is run, unchanged, on the 60 healthcare stocks of
+`bots/healthcare/config/tickers.yaml`. Nothing in sections 1 to 8 changes (same conditions, I1
+still untested, same entries, exits, size, costs, $10 price gate, 30-trade bar and bootstrap).
+- **Healthcare primary:** all 60 stocks, 2026-04-01 to 2026-09-30 (their 5-minute data ends
+  2026-09-29).
+- **Healthcare context:** the same 60 stocks, 2025-04-01 to 2026-03-31.
+- Benchmark in the report: buying and holding XLV over the same dates.
+- Same pass rule as section 7. A fail or inconclusive result changes nothing about the
+  silver result above, and the two are not pooled.
+Healthcare is a slower sector than silver miners; a 3% gap there is usually an earnings or news
+event. That is a reason these runs may find more or fewer trades, not a reason to change a rule.
