@@ -109,3 +109,28 @@ silver miners ETF) over the same dates.
   one, and none of its numbers were chosen from results.
 - **Intraday data limits.** Entries use bar closes and next-bar opens; real fills during fast
   gap-up openings can be worse than the 0.5-cent spread assumed.
+
+## 9. Results (run 2026-10-11, rules unchanged from sections 1 to 8)
+
+`python3 scripts/backtest_gap_go.py --start 2026-04-01 --end 2026-09-30 --tag sg_a` (and `sg_b`, `sg_c`
+for the other runs). Trade lists: `reports/backtest_trades<tag>.jsonl`. I1 was not tested.
+
+| Run | Stocks | Sessions | Trades | Win rate | Net after costs | 90% lower bound / session | Verdict |
+|---|---|---|---|---|---|---|---|
+| **Primary** | 6 silver miners, 2026-04-01..09-30 | 126 | **4** | 50% | **-$9.10** | -$0.61 | **Inconclusive (<30 trades)** |
+| B | same 6, 2025-04-01..2026-03-31 | 251 | 9 | 33% | -$69.77 | -$0.84 | Inconclusive |
+| C | all 29 mining stocks, 2026-04-01..09-30 | 126 | 19 | 47% | -$48.42 | -$2.51 | Inconclusive |
+
+Funnel (stock-days, each stage includes the ones before it), primary: 756 stock-days; D2 373;
+D3 51; $10 price gate 49; D1 44; I2 28; I3 7; taken 4. Context B: 1,412; 1,265; 167; 89; 75; 42;
+9; 9. Context C: 3,654; 2,107; 224; 221; 191; 112; 29; 19.
+
+Primary: gross -$1.02 (spread included), commission $8.08. Exits: 2 stops, 2 trailing stops. SVM
+2 trades +$49.49, AG -$28.40, PAAS -$30.19; all four in May 2026. Buying and holding SIL over the
+same dates: -6.8% (+129.1% over context B's twelve months). Context C's universe includes SIL
+itself, as part of the 29-stock mining list.
+
+Reading: the strategy is far too selective to judge (4 trades in six months; the pre-registered
+bar is 30). The point estimate is slightly negative in all three runs and commission is larger than
+the gross result in each. Nothing here supports trading it. A pass was not reached and no rule was
+changed after seeing these numbers.
