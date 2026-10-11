@@ -239,3 +239,23 @@ D3, I2, I3; I1 untested; entries, exits, size, costs, the 30-trade bar and the b
   so these results are likely to be flattering, not harsh. Commission is $0.005 a share, which
   is about $4 a side on a $2,500 position in a $3 stock.
 - Under 30 trades is inconclusive.
+
+### $3 price floor results (run 2026-10-11, section 13 rules)
+
+`python3 scripts/backtest_gap_go.py --min-price 3 --start 2023-09-07 --end 2026-09-30 --tag sg_p3`
+(and `--end 2025-03-31 --tag sg_p3_early`).
+
+| Run | Sessions | Trades | Win rate | Gross | Commission | Net | 90% lower bound / session | SIL | Verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| **Decision: 2023-09-07..2026-09-30, $3 floor** | 769 | **28** | 43% | -$132.96 | $117.27 | **-$250.22** | -$0.66 | +243.0% | **Inconclusive (28 < 30)** |
+| 2023-09-07..2025-03-31 only | 392 | 12 | 33% | -$97.87 | $65.50 | -$163.37 | -$0.85 | +57.3% | Inconclusive |
+
+Funnel (decision run, stock-days): 4,126; D2 2,735; D3 306; price 281; D1 241; I2 137; I3 46;
+taken 28. Exits: 14 stops, 14 trailing stops. Avg win $20.82, avg loss -$31.25, avg R before
+commission -0.18, largest drawdown -$322.52. By stock: AG +$30.10 (3 trades), EXK -$55.26 (6),
+HL -$100.78 (8), PAAS -$30.19 (1), SVM -$72.28 (8), VZLA -$21.82 (2). The run is two trades
+short of the pre-registered 30, so it is inconclusive by the rule, not a pass or a fail; the
+point estimate is clearly negative (net -$250.22, gross also negative before commission) and the
+bootstrap bound is below zero. Commission is large here ($117.27) because $2,500 buys 500 to 800
+shares of a $3 to $5 stock at $0.005 a share. The half-cent spread assumption is likely generous
+at these prices (section 13).
