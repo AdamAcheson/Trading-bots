@@ -98,3 +98,31 @@ account holder can see what the strategy gave up or gained against simply holdin
   prevents it.
 - **Seen markets:** 2017 to 2026 was used to test other strategies; none of these rules was
   chosen from results.
+
+## Result, stage 1 (2026-10-12): FAIL -- testing stopped; stage 2 not run
+
+`python3 scripts/backtest_daily_gap.py --start 2006-01-01 --end 2016-12-31 --stage 1`
+(calendar from 2007-09-04, SPY's 200th day; 503 members, none missing data):
+
+| | Strategy | SPY buy and hold |
+|---|---|---|
+| $5,000 became | **$3,480 (-30.4%, -3.8% a year)** | +49.9% (+4.4% a year) |
+| Largest drawdown | -37.1% | -56.5% |
+
+| | |
+|---|---|
+| Closed trades | 193; win rate 45%; average win +$71.95, average loss -$73.39; average net -$7.88, average gross -$5.86 |
+| Average holding | 4.5 trading days; invested on 37% of days |
+| Exits | 150 time limit, 43 stop |
+| Commission | $388 |
+| Signals | 512 found in 9.3 years (about 55 a year); 65 skipped for lack of a slot, 254 for lack of settled cash |
+| Net by year | 2007 -408, 2008 -722, 2009 +205, 2010 +319, 2011 -337, 2012 -462, 2013 +171, 2014 -266, 2015 -97, 2016 +77 |
+| Context: $0 commission | $3,868 (-22.6%), still a loss; average gross/trade -$5.86 |
+
+Reading: the entry has no edge before costs (gross average -$5.86 a trade, i.e. buying the day
+after a 3%+ gap-up on twice the volume and holding up to five days returned slightly less than
+nothing, after a 0.10% slippage allowance); commission only deepens the loss. Signals were rarer
+than expected (about one a week) because the combined conditions plus the $10, liquidity and
+membership rules are strict, so the "many signals every day" premise did not hold: more than
+half of the signals could not be taken for lack of settled cash (two slots, five-day holds). No
+rule was changed after seeing this.
